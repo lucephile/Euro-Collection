@@ -82,3 +82,25 @@ supabase/
   d'environnement du projet Vercel (Settings > Environment Variables), puis redéployer
 - `/commemoratives` utilise encore des données d'exemple (2 pièces de 2004) — import réel des
   2€ commémoratives (2004-2027) à faire dans un prochain lot
+
+## Corrections apportées (lot bugs/UX)
+- **Redirection email "localhost"** : `signUp` envoie maintenant `emailRedirectTo` basé sur
+  `window.location.origin`. **Action requise côté Supabase** : dans le dashboard Supabase >
+  Authentication > URL Configuration, régler "Site URL" sur l'URL Vercel de prod et ajouter cette
+  même URL (+ `/login`) dans "Redirect URLs" — sinon Supabase rejette la redirection personnalisée
+  par sécurité et retombe sur localhost
+- **Redirection après connexion** : `/login` redirige vers `/` (accueil) après un `signInWithPassword` réussi
+- **Filtres "cacher"** : seule l'image disparaît désormais (`visibility: hidden` sur `<img>`), la
+  cellule colorée (vert/rouge) reste visible pour garder la grille lisible
+- **Agrandissement des pièces** : bouton loupe "+" en haut à droite de chaque image (visible au
+  survol), ouvre l'image en grand dans une fenêtre modale — plus fiable qu'un simple survol sur mobile/tactile
+- **Header dynamique** : `Header.jsx` gère maintenant lui-même l'état de connexion Supabase
+  (`onAuthStateChange`) ; affiche "Mon profil" au lieu de "Connexion" une fois connecté
+- **Nouvelle page `/account` ("Mon profil")** : email, pseudo, liens de partage
+  `/sets/pseudo` et `/commemoratives/pseudo` en clair, déconnexion, et suppression de compte
+- **Suppression de compte** : nécessite une route serveur (`app/api/delete-account/route.js`) car
+  la suppression d'un utilisateur Supabase Auth requiert la clé `service_role`, jamais exposée au
+  navigateur. **Nouvelle variable d'environnement à ajouter sur Vercel** :
+  `SUPABASE_SERVICE_ROLE_KEY` (Supabase > Project Settings > API > service_role — à garder secrète,
+  ne jamais utiliser `NEXT_PUBLIC_`). Le profil et toute la collection partent automatiquement avec
+  le compte (`ON DELETE CASCADE` déjà en place dans `schema.sql`)

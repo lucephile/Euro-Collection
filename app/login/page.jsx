@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [mode, setMode] = useState("login"); // "login" | "signup"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,12 +18,19 @@ export default function LoginPage() {
 
     if (mode === "login") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      setMessage(error ? error.message : "Connecté !");
+      if (error) return setMessage(error.message);
+      router.push("/"); // redirection vers l'accueil une fois connecté
       return;
     }
 
     // Inscription : le pseudo devient l'URL de partage (/sets/pseudo)
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    // emailRedirectTo : évite que le lien de validation reçu par email pointe vers "localhost"
+    // (utilise l'URL réelle du site, quel que soit l'environnement : local, preview Vercel, prod)
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: `${window.location.origin}/login` },
+    });
     if (error) return setMessage(error.message);
 
     const { error: profileError } = await supabase
@@ -31,7 +40,7 @@ export default function LoginPage() {
       setMessage("Compte créé, mais pseudo déjà pris ou invalide (lettres/chiffres/tirets, 3-30 caractères).");
       return;
     }
-    setMessage(`Compte créé ! Votre collection sera partageable sur /sets/${username}`);
+    setMessage(`Compte créé ! Vérifiez vos emails pour valider votre compte. Votre collection sera partageable sur /sets/${username}`);
   }
 
   return (

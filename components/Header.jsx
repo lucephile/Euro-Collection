@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { supabase } from "../lib/supabaseClient";
 
 // Un seul tableau à modifier pour changer la nav sur TOUTES les pages
 const NAV_LINKS = [
@@ -11,8 +12,17 @@ const NAV_LINKS = [
   { href: "/stats", label: "Mes statistiques" },
 ];
 
-export default function Header({ user }) {
+export default function Header() {
   const [open, setOpen] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   return (
     <header style={{ background: "var(--bg-header)", borderBottom: "1px solid #e8dfc0" }}>
@@ -37,9 +47,9 @@ export default function Header({ user }) {
             </Link>
           ))}
           {user ? (
-            <Link href="/account">{user.email}</Link>
+            <Link href="/account" onClick={() => setOpen(false)}>Mon profil</Link>
           ) : (
-            <Link href="/login">Connexion</Link>
+            <Link href="/login" onClick={() => setOpen(false)}>Connexion</Link>
           )}
         </nav>
       </div>

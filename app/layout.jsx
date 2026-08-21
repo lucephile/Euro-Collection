@@ -8,11 +8,10 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  // TODO: brancher l'utilisateur connecté (Supabase auth) et le passer à <Header user={...} />
   return (
     <html lang="fr">
       <body>
-        <Header user={null} />
+        <Header />
         <main className="container" style={{ padding: "24px 16px", minHeight: "70vh" }}>
           {children}
         </main>
