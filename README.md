@@ -69,3 +69,16 @@ supabase/
   — à sourcer séparément (ex: table de drapeaux SVG par code ISO, déjà présent dans `countries.iso_code`)
 - À exécuter après `schema.sql` dans l'éditeur SQL Supabase
 - Prochaine étape : brancher `app/sets/page.jsx` sur ces vraies données au lieu du tableau d'exemple
+
+## Page /sets branchée sur les vraies données (ajouté)
+- `app/sets/page.jsx` interroge maintenant Supabase (`coin_series` + `countries` + `pieces`) au
+  lieu des données d'exemple codées en dur — corrige l'affichage incomplet observé sur le déploiement Vercel
+- Drapeaux : comme `countries.flag_url` n'est pas encore rempli (non fourni par la page source), la
+  page utilise temporairement flagcdn.com par `iso_code` (déjà en base) — à remplacer si vous
+  préférez des drapeaux hébergés en local
+- Si la page affiche une erreur de chargement : vérifier que `schema.sql` PUIS `import_sets.sql`
+  ont bien été exécutés dans l'éditeur SQL Supabase (dans cet ordre), et que
+  `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` sont bien réglées dans les variables
+  d'environnement du projet Vercel (Settings > Environment Variables), puis redéployer
+- `/commemoratives` utilise encore des données d'exemple (2 pièces de 2004) — import réel des
+  2€ commémoratives (2004-2027) à faire dans un prochain lot
