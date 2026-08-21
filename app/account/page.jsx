@@ -12,23 +12,49 @@ export default function AccountPage() {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState(null);
 
+  // Formulaire "définir mon pseudo" (compte sans profil, ex: créé avant un fix, ou incident)
+  const [newUsername, setNewUsername] = useState("");
+  const [savingUsername, setSavingUsername] = useState(false);
+  const [usernameError, setUsernameError] = useState(null);
+
   useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setStatus("signed-out");
-        return;
-      }
-      setUser(user);
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("username")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      setUsername(profile?.username ?? null);
-      setStatus("ok");
-    })();
+    loadProfile();
   }, []);
+
+  async function loadProfile() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setStatus("signed-out");
+      return;
+    }
+    setUser(user);
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    setUsername(profile?.username ?? null);
+    setStatus("ok");
+  }
+
+  async function handleSetUsername(e) {
+    e.preventDefault();
+    setUsernameError(null);
+    setSavingUsername(true);
+
+    const { error } = await supabase.from("profiles").insert({ user_id: user.id, username: newUsername });
+
+    setSavingUsername(false);
+    if (error) {
+      setUsernameError(
+        error.code === "23505"
+          ? "Ce pseudo est déjà pris, essayez-en un autre."
+          : "Pseudo invalide (lettres minuscules, chiffres, tirets, 3 à 30 caractères)."
+      );
+      return;
+    }
+    setUsername(newUsername);
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -65,6 +91,24 @@ export default function AccountPage() {
       <p><strong>Email :</strong> {user.email}</p>
       <p><strong>Pseudo :</strong> {username ?? "—"}</p>
 
+      {!username && (
+        <form onSubmit={handleSetUsername} style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+          <input
+            type="text"
+            placeholder="Choisir un pseudo"
+            required
+            pattern="[a-z0-9_-]{3,30}"
+            title="Lettres minuscules, chiffres, tirets — 3 à 30 caractères"
+            value={newUsername}
+            onChange={(e) => setNewUsername(e.target.value)}
+          />
+          <button type="submit" disabled={savingUsername}>
+            {savingUsername ? "…" : "Enregistrer"}
+          </button>
+        </form>
+      )}
+      {usernameError && <p style={{ color: "#a33" }}>{usernameError}</p>}
+
       <h2 style={{ marginTop: 24 }}>Mes liens à partager</h2>
       {username ? (
         <ul>
@@ -78,7 +122,7 @@ export default function AccountPage() {
           </li>
         </ul>
       ) : (
-        <p style={{ color: "var(--text-muted)" }}>Aucun pseudo associé à ce compte.</p>
+        <p style={{ color: "var(--text-muted)" }}>Choisissez un pseudo ci-dessus pour obtenir vos liens de partage.</p>
       )}
 
       <h2 style={{ marginTop: 24 }}>Session</h2>

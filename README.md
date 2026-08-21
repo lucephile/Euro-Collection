@@ -160,3 +160,13 @@ Deux causes possibles à vérifier :
 - Corrigé : ne se déclenche plus que si l'URL contient réellement les paramètres envoyés par
   Supabase au retour du lien de confirmation (`access_token` dans le hash, ou `code=` en query).
   Une visite normale de `/login` n'est plus affectée, qu'une session existe ou non.
+
+## Fix : pseudo introuvable pour les comptes créés avant le fix précédent (ajouté)
+- Les comptes créés pendant les essais précédents (avant l'ajout du stockage du pseudo dans
+  `user_metadata`) n'ont jamais eu de pseudo associé, et n'en auront jamais automatiquement —
+  `ensureProfile()` ne fait rien s'il ne trouve pas de pseudo en attente.
+- Ajout d'un formulaire directement sur `/account` ("Mon profil") : si aucun pseudo n'est associé
+  au compte, un champ apparaît pour en choisir un et le valider immédiatement (fonctionne car
+  l'utilisateur a déjà une session active sur cette page, donc la RLS autorise l'écriture).
+- Si tu es dans ce cas : va sur "Mon profil" et choisis ton pseudo depuis ce nouveau formulaire —
+  pas besoin de recréer un compte.
