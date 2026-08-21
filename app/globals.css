@@ -1,0 +1,62 @@
+:root {
+  /* Fond neutre du site — jaune pâle doux */
+  --bg-page: #FBF6E9;
+  --bg-header: #F6EFD8;
+  --bg-card: #FFFFFF;
+
+  --text-main: #2E2A20;
+  --text-muted: #6B6455;
+
+  --accent: #C9A227;      /* jaune plus soutenu, pour liens/boutons */
+  --accent-hover: #B08D1E;
+
+  /* Statuts de possession — désaturés, pas agressifs pour les yeux */
+  --owned-bg: #D9EAD3;      /* vert pâle */
+  --owned-border: #A9CBA0;
+  --missing-bg: #F3D9D6;    /* rouge/rose pâle */
+  --missing-border: #D9A9A3;
+
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-page);
+  color: var(--text-main);
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); }
+
+.container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* ---------- Cellule pièce (statut possession) ---------- */
+.coin-cell {
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  padding: 6px;
+  transition: background-color .15s ease;
+}
+.coin-cell.owned {
+  background: var(--owned-bg);
+  border-color: var(--owned-border);
+}
+.coin-cell.missing {
+  background: var(--missing-bg);
+  border-color: var(--missing-border);
+}
+.coin-cell img { width: 100%; height: auto; display: block; }
+
+/* Filtres d'affichage pilotés en CSS via des classes sur <body> ou un wrapper */
+.hide-owned .coin-cell.owned { display: none; }
+.hide-missing .coin-cell.missing { display: none; }
