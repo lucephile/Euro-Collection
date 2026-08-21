@@ -104,3 +104,11 @@ supabase/
   `SUPABASE_SERVICE_ROLE_KEY` (Supabase > Project Settings > API > service_role — à garder secrète,
   ne jamais utiliser `NEXT_PUBLIC_`). Le profil et toute la collection partent automatiquement avec
   le compte (`ON DELETE CASCADE` déjà en place dans `schema.sql`)
+
+## Fix build cassé par SUPABASE_SERVICE_ROLE_KEY manquante
+- `app/api/delete-account/route.js` créait le client Supabase admin au chargement du module :
+  si la variable d'env était absente, ça faisait planter **tout le build Vercel**, pas juste cet
+  endpoint. Le client est maintenant créé à l'intérieur du handler `POST`, avec un message
+  d'erreur clair (500) si la clé manque, au lieu de casser le déploiement.
+- Il reste nécessaire d'ajouter `SUPABASE_SERVICE_ROLE_KEY` sur Vercel pour que la suppression de
+  compte fonctionne réellement (voir section précédente) — mais son absence ne bloque plus le site.

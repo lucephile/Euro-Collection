@@ -1,16 +1,25 @@
 import { createClient } from "@supabase/supabase-js";
 
 // Route serveur : seule façon sûre de supprimer un compte Supabase Auth.
-// Utilise la clé "service role" (jamais exposée au navigateur, contrairement à
-// NEXT_PUBLIC_SUPABASE_ANON_KEY) — à ajouter comme variable d'environnement
-// SUPABASE_SERVICE_ROLE_KEY (Vercel > Settings > Environment Variables),
-// disponible dans Supabase > Project Settings > API > service_role.
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+// Le client admin est créé À L'INTÉRIEUR du handler (pas au chargement du module) :
+// sinon, si SUPABASE_SERVICE_ROLE_KEY est absente, Next.js plante au BUILD (toutes
+// les pages), pas seulement au moment d'appeler cette route.
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key);
+}
 
 export async function POST(request) {
+  const supabaseAdmin = getSupabaseAdmin();
+  if (!supabaseAdmin) {
+    return Response.json(
+      { error: "Suppression de compte non configurée côté serveur (SUPABASE_SERVICE_ROLE_KEY manquante)." },
+      { status: 500 }
+    );
+  }
+
   const authHeader = request.headers.get("authorization") || "";
   const token = authHeader.replace("Bearer ", "");
   if (!token) {
