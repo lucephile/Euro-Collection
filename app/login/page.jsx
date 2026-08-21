@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
+import { ensureProfile } from "../../lib/collectionData";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,35 +13,53 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [message, setMessage] = useState(null);
 
+  // Cas où on arrive ici APRÈS avoir cliqué sur le lien de confirmation d'email :
+  // Supabase a déjà ouvert une session (détectée automatiquement dans l'URL). On peut donc
+  // enfin créer le profil (le pseudo choisi à l'inscription est en attente dans user_metadata).
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await ensureProfile(session.user);
+        router.push("/");
+      }
+    })();
+  }, []);
+
   async function handleSubmit(e) {
     e.preventDefault();
     setMessage(null);
 
     if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) return setMessage(error.message);
-      router.push("/"); // redirection vers l'accueil une fois connecté
+      await ensureProfile(data.user); // no-op si le profil existe déjà
+      router.push("/");
       return;
     }
 
-    // Inscription : le pseudo devient l'URL de partage (/sets/pseudo)
-    // emailRedirectTo : évite que le lien de validation reçu par email pointe vers "localhost"
-    // (utilise l'URL réelle du site, quel que soit l'environnement : local, preview Vercel, prod)
+    // Inscription : le pseudo est stocké dans user_metadata (pas encore en base "profiles",
+    // car tant que l'email n'est pas confirmé, aucune session active -> la RLS refuserait
+    // l'écriture). Il sera récupéré et inséré dans "profiles" une fois la confirmation faite
+    // (voir useEffect ci-dessus, déclenché au retour sur /login).
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${window.location.origin}/login` },
+      options: {
+        emailRedirectTo: `${window.location.origin}/login`,
+        data: { username },
+      },
     });
     if (error) return setMessage(error.message);
 
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .insert({ user_id: data.user.id, username });
-    if (profileError) {
-      setMessage("Compte créé, mais pseudo déjà pris ou invalide (lettres/chiffres/tirets, 3-30 caractères).");
+    if (data.session) {
+      // La confirmation email est désactivée sur ce projet Supabase -> session immédiate
+      await ensureProfile(data.user);
+      router.push("/");
       return;
     }
-    setMessage(`Compte créé ! Vérifiez vos emails pour valider votre compte. Votre collection sera partageable sur /sets/${username}`);
+
+    setMessage("Compte créé ! Vérifiez vos emails et cliquez sur le lien de confirmation pour activer votre profil.");
   }
 
   return (

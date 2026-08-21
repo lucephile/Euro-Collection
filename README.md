@@ -125,3 +125,30 @@ supabase/
   l'indique aussi en haut de la page)
 - `/commemoratives` utilise toujours des données d'exemple (pas d'IDs réels en base) — la
   persistance y sera branchée une fois l'import réel des commémoratives terminé
+
+## Fix : création de compte cassée par la confirmation email (ajouté)
+- **Cause racine** : `signUp()` ne crée pas de session tant que l'email n'est pas confirmé (si la
+  confirmation email est activée sur le projet Supabase, ce qui est le cas ici). Le code
+  précédent tentait d'insérer le profil (pseudo) juste après `signUp()`, sans session active — la
+  RLS (`auth.uid() = user_id`) refusait donc l'écriture à chaque fois, quel que soit le pseudo.
+  Le message d'erreur affiché ("pseudo déjà pris ou invalide") était trompeur : la vraie cause
+  était l'absence de session, pas le pseudo lui-même.
+- **Fix** : le pseudo choisi est stocké temporairement dans `user_metadata` lors de l'inscription
+  (`options.data.username`). Une fois l'email confirmé (retour sur `/login` via le lien reçu par
+  mail, qui ouvre automatiquement une session), `ensureProfile()` récupère ce pseudo et crée enfin
+  la ligne `profiles` — cette fois avec une session active, donc la RLS l'autorise.
+- Si la confirmation email est désactivée sur le projet Supabase (session immédiate au signup), le
+  profil est créé tout de suite sans attendre — les deux cas sont gérés.
+
+### Concernant le lien "Email link is invalid or has expired"
+Deux causes possibles à vérifier :
+1. **Site URL / Redirect URLs mal réglées dans Supabase** (Authentication > URL Configuration) —
+   si l'URL de prod Vercel n'y figure pas exactement, la confirmation échoue. À vérifier en
+   premier.
+2. **Pré-clic automatique du lien par un scanner anti-phishing** (Outlook Safe Links, certains
+   antivirus/proxys d'entreprise) : ces outils "cliquent" le lien avant vous pour vérifier qu'il
+   est sûr, ce qui consomme le jeton à usage unique — quand vous cliquez ensuite, il est déjà
+   expiré. C'est un problème connu avec les liens de confirmation Supabase. Solution si c'est le
+   cas : passer par un flux où le lien mène à une page de confirmation avec un bouton à cliquer
+   manuellement (pas une action déclenchée automatiquement au chargement), plutôt que le lien
+   direct par défaut.
