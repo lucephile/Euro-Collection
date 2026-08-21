@@ -170,3 +170,12 @@ Deux causes possibles à vérifier :
   l'utilisateur a déjà une session active sur cette page, donc la RLS autorise l'écriture).
 - Si tu es dans ce cas : va sur "Mon profil" et choisis ton pseudo depuis ce nouveau formulaire —
   pas besoin de recréer un compte.
+
+## Fix : /sets/[username] affichait encore l'ancien tableau d'exemple (ajouté)
+- Quand `/sets` a été branchée sur les vraies données Supabase, la page publique
+  `/sets/[username]` n'avait pas été mise à jour en parallèle et utilisait toujours les 2 pays
+  d'exemple codés en dur — d'où la différence observée entre les deux pages.
+- Corrigé : `/sets/[username]` interroge maintenant les mêmes tables (`coin_series` + `countries` +
+  `pieces`) que `/sets`, en lecture seule, avec la collection du pseudo consulté.
+- `/commemoratives/[username]` reste sur des données d'exemple pour l'instant, cohérent avec
+  `/commemoratives` qui n'a pas encore reçu l'import réel des 2€ commémoratives.

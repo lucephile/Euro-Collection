@@ -3,40 +3,50 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import CoinCell from "../../../components/CoinCell";
+import { supabase } from "../../../lib/supabaseClient";
 import { getProfileByUsername, getOwnedPieces } from "../../../lib/collectionData";
 
 const VALUES = ["1c", "2c", "5c", "10c", "20c", "50c", "1e", "2e"];
-
-// Mêmes données d'exemple que /app/sets/page.jsx (à remplacer par le vrai référentiel Supabase)
-const SAMPLE_SERIES = [
-  {
-    id: 1,
-    country: "Allemagne",
-    label: "(2002-)",
-    flag: "/flags/de.svg",
-    images: Object.fromEntries(VALUES.map((v) => [v, `/coins/${v}_allemagne.webp`])),
-  },
-  {
-    id: 2,
-    country: "Belgique",
-    label: "1re série (1999-2007)",
-    flag: "/flags/be.svg",
-    images: Object.fromEntries(VALUES.map((v) => [v, `/coins/${v}_belgique1.webp`])),
-  },
-];
 
 export default function PublicSetsPage() {
   const { username } = useParams();
   const [status, setStatus] = useState("loading"); // loading | not-found | private | ok
   const [owned, setOwned] = useState({});
+  const [series, setSeries] = useState([]);
 
   useEffect(() => {
     (async () => {
       const profile = await getProfileByUsername(username);
       if (!profile) return setStatus("not-found");
       if (!profile.is_public) return setStatus("private");
-      const ownedPieces = await getOwnedPieces(profile.user_id);
-      setOwned(ownedPieces);
+
+      const { data, error } = await supabase
+        .from("coin_series")
+        .select(`
+          id, label, sort_order,
+          countries ( name, slug, iso_code, sort_order ),
+          pieces ( id, value, image_url )
+        `)
+        .order("sort_order");
+
+      if (error) {
+        console.error(error);
+        setStatus("not-found");
+        return;
+      }
+
+      const formatted = (data ?? []).map((s) => ({
+        id: s.id,
+        country: s.countries?.name ?? "?",
+        countrySortOrder: s.countries?.sort_order ?? 0,
+        label: s.label,
+        isoCode: s.countries?.iso_code?.toLowerCase(),
+        pieces: Object.fromEntries((s.pieces ?? []).map((p) => [p.value, p])),
+      }));
+      formatted.sort((a, b) => a.countrySortOrder - b.countrySortOrder || a.id - b.id);
+      setSeries(formatted);
+
+      setOwned(await getOwnedPieces(profile.user_id));
       setStatus("ok");
     })();
   }, [username]);
@@ -61,22 +71,32 @@ export default function PublicSetsPage() {
             </tr>
           </thead>
           <tbody>
-            {SAMPLE_SERIES.map((serie) => (
+            {series.map((serie) => (
               <tr key={serie.id}>
                 <td style={{ padding: 8, whiteSpace: "nowrap" }}>
-                  <img src={serie.flag} alt="" width={20} style={{ verticalAlign: "middle", marginRight: 6 }} />
+                  {serie.isoCode && (
+                    <img
+                      src={`https://flagcdn.com/w40/${serie.isoCode}.png`}
+                      alt=""
+                      width={20}
+                      style={{ verticalAlign: "middle", marginRight: 6 }}
+                    />
+                  )}
                   {serie.country} <small style={{ color: "var(--text-muted)" }}>{serie.label}</small>
                 </td>
                 {VALUES.map((v) => {
-                  // id de pièce réel = pieces.id (série x valeur) une fois les vraies données importées
-                  const pieceId = `${serie.id}-${v}`;
+                  const piece = serie.pieces[v];
                   return (
                     <td key={v} style={{ padding: 4, width: 80 }}>
-                      <CoinCell
-                        imageUrl={serie.images[v]}
-                        alt={`${v} ${serie.country}`}
-                        owned={!!owned[pieceId]}
-                      />
+                      {piece ? (
+                        <CoinCell
+                          imageUrl={piece.image_url}
+                          alt={`${v} ${serie.country}`}
+                          owned={!!owned[piece.id]}
+                        />
+                      ) : (
+                        <span style={{ color: "var(--text-muted)" }}>—</span>
+                      )}
                     </td>
                   );
                 })}
