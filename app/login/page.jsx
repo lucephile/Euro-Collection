@@ -16,7 +16,13 @@ export default function LoginPage() {
   // Cas où on arrive ici APRÈS avoir cliqué sur le lien de confirmation d'email :
   // Supabase a déjà ouvert une session (détectée automatiquement dans l'URL). On peut donc
   // enfin créer le profil (le pseudo choisi à l'inscription est en attente dans user_metadata).
+  // Limité au vrai retour de confirmation (présence de jetons dans l'URL) pour ne pas rediriger
+  // une simple visite de /login par quelqu'un déjà connecté par ailleurs.
   useEffect(() => {
+    const isEmailConfirmReturn =
+      window.location.hash.includes("access_token") || window.location.search.includes("code=");
+    if (!isEmailConfirmReturn) return;
+
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {

@@ -152,3 +152,11 @@ Deux causes possibles à vérifier :
    cas : passer par un flux où le lien mène à une page de confirmation avec un bouton à cliquer
    manuellement (pas une action déclenchée automatiquement au chargement), plutôt que le lien
    direct par défaut.
+
+## Fix : /login redirigeait systématiquement vers l'accueil (ajouté)
+- Le `useEffect` de détection "retour de confirmation email" redirigeait dès qu'une session
+  Supabase existait, même en visite normale de `/login` par quelqu'un déjà connecté par ailleurs
+  (session persistée en local) — la page devenait inutilisable.
+- Corrigé : ne se déclenche plus que si l'URL contient réellement les paramètres envoyés par
+  Supabase au retour du lien de confirmation (`access_token` dans le hash, ou `code=` en query).
+  Une visite normale de `/login` n'est plus affectée, qu'une session existe ou non.
