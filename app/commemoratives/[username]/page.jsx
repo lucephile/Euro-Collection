@@ -3,23 +3,33 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import CoinCell from "../../../components/CoinCell";
+import { supabase } from "../../../lib/supabaseClient";
 import { getProfileByUsername, getOwnedCommemoratives } from "../../../lib/collectionData";
-
-const SAMPLE_COMMEMORATIVES = [
-  { year: 2004, country: "Finlande", name: "Elargissement de l'Union européenne à dix nouveaux États membres", mintage: 1000000, issueDate: "juin 2004", image: "/coins/2e_comme_finlande_2004.webp" },
-  { year: 2004, country: "Grèce", name: "Jeux olympiques d'Athènes de 2004", mintage: 50000000, issueDate: "mars 2004", image: "/coins/2e_comme_grece_2004.webp" },
-];
 
 export default function PublicCommemorativesPage() {
   const { username } = useParams();
   const [status, setStatus] = useState("loading");
   const [owned, setOwned] = useState({});
+  const [coins, setCoins] = useState([]);
 
   useEffect(() => {
     (async () => {
       const profile = await getProfileByUsername(username);
       if (!profile) return setStatus("not-found");
       if (!profile.is_public) return setStatus("private");
+
+      const { data, error } = await supabase
+        .from("commemorative_coins")
+        .select("id, year, name, mintage, issue_date, image_url, countries ( name, iso_code, sort_order )")
+        .order("year")
+        .order("sort_order", { referencedTable: "countries" });
+
+      if (error) {
+        console.error(error);
+        setStatus("not-found");
+        return;
+      }
+      setCoins(data ?? []);
       setOwned(await getOwnedCommemoratives(profile.user_id));
       setStatus("ok");
     })();
@@ -29,8 +39,12 @@ export default function PublicCommemorativesPage() {
   if (status === "not-found") return <p>Aucun utilisateur avec le pseudo « {username} ».</p>;
   if (status === "private") return <p>Cette collection n'est pas publique.</p>;
 
-  const years = [...new Set(SAMPLE_COMMEMORATIVES.map((c) => c.year))];
-  const countries = [...new Set(SAMPLE_COMMEMORATIVES.map((c) => c.country))];
+  const years = [...new Set(coins.map((c) => c.year))].sort();
+  const countriesByName = new Map();
+  coins.forEach((c) => {
+    if (c.countries) countriesByName.set(c.countries.name, c.countries);
+  });
+  const countries = [...countriesByName.values()].sort((a, b) => a.sort_order - b.sort_order);
 
   return (
     <div>
@@ -44,7 +58,18 @@ export default function PublicCommemorativesPage() {
           <thead>
             <tr>
               <th style={{ textAlign: "left", padding: 8 }}>Année</th>
-              {countries.map((c) => <th key={c} style={{ padding: 8 }}>{c}</th>)}
+              {countries.map((c) => (
+                <th key={c.name} style={{ padding: 8 }}>
+                  {c.iso_code && (
+                    <img
+                      src={`https://flagcdn.com/w40/${c.iso_code.toLowerCase()}.png`}
+                      alt={c.name}
+                      title={c.name}
+                      width={20}
+                    />
+                  )}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -52,18 +77,19 @@ export default function PublicCommemorativesPage() {
               <tr key={year}>
                 <td style={{ padding: 8, fontWeight: 600 }}>{year}</td>
                 {countries.map((country) => {
-                  const coin = SAMPLE_COMMEMORATIVES.find((c) => c.year === year && c.country === country);
-                  const key = `${year}-${country}`;
+                  const coin = coins.find((c) => c.year === year && c.countries?.name === country.name);
                   return (
-                    <td key={country} style={{ padding: 4, width: 100 }}>
+                    <td key={country.name} style={{ padding: 4, width: 100 }}>
                       {coin ? (
                         <CoinCell
-                          imageUrl={coin.image}
+                          imageUrl={coin.image_url}
                           alt={coin.name}
-                          owned={!!owned[key]}
-                          info={{ name: coin.name, mintage: coin.mintage, issueDate: coin.issueDate }}
+                          owned={!!owned[coin.id]}
+                          info={{ name: coin.name, mintage: coin.mintage, issueDate: coin.issue_date }}
                         />
-                      ) : <span style={{ color: "var(--text-muted)" }}>—</span>}
+                      ) : (
+                        <span style={{ color: "var(--text-muted)" }}>—</span>
+                      )}
                     </td>
                   );
                 })}

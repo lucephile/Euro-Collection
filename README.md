@@ -179,3 +179,21 @@ Deux causes possibles à vérifier :
   `pieces`) que `/sets`, en lecture seule, avec la collection du pseudo consulté.
 - `/commemoratives/[username]` reste sur des données d'exemple pour l'instant, cohérent avec
   `/commemoratives` qui n'a pas encore reçu l'import réel des 2€ commémoratives.
+
+## Import des 2€ commémoratives 2004-2006 + pages branchées (ajouté)
+- `supabase/import_commemoratives.sql` : 21 pièces réelles (2004: 6, 2005: 8, 2006: 7), transcrites
+  depuis https://monnaies-euros.com/euro2commemorative{2004,2005,2006}.php — nom, tirage, date
+  d'émission, cotation et image. **À exécuter après `import_sets.sql`** (les pays doivent déjà
+  exister). Les années 2007-2027 restent à faire (mises en pause pour l'instant, à la demande).
+- `/commemoratives` et `/commemoratives/[username]` fonctionnent maintenant exactement comme les
+  pages `/sets` équivalentes :
+  - vraies données Supabase (plus de tableau d'exemple)
+  - sauvegarde réelle de la collection (`user_collection_commemoratives`) avec mise à jour
+    optimiste, et redirection vers `/login` si non connecté (page publique par pseudo inchangée,
+    lecture seule)
+  - drapeaux via flagcdn.com par pays
+  - loupe/agrandissement et filtres "cacher" (déjà communs via `CoinCell` / `DisplayFilters`,
+    aucune modif nécessaire de ce côté)
+- Les colonnes (pays) et lignes (années) du tableau sont désormais générées dynamiquement à partir
+  des données chargées, plutôt que codées en dur — elles s'étendront automatiquement au fur et à
+  mesure de l'import des années suivantes
