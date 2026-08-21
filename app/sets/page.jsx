@@ -1,29 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import CoinCell from "../../components/CoinCell";
 import DisplayFilters from "../../components/DisplayFilters";
 import { supabase } from "../../lib/supabaseClient";
+import { getOwnedPieces, setPieceOwned } from "../../lib/collectionData";
 
 const VALUES = ["1c", "2c", "5c", "10c", "20c", "50c", "1e", "2e"];
 
 export default function SetsPage() {
+  const router = useRouter();
   const [filters, setFilters] = useState({ hideOwned: false, hideMissing: false });
-  const [owned, setOwned] = useState({}); // TODO: charger la vraie collection si l'utilisateur est connecté
+  const [owned, setOwned] = useState({}); // { [piece_id]: true }
   const [series, setSeries] = useState([]);
   const [status, setStatus] = useState("loading"); // loading | error | ok
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     (async () => {
-      // Une requête : toutes les séries + leur pays + leurs pièces, dans l'ordre d'affichage
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+
+      // Toutes les séries + leur pays + leurs pièces (avec l'id réel de chaque pièce)
       const { data, error } = await supabase
         .from("coin_series")
         .select(`
           id, label, sort_order,
           countries ( name, slug, iso_code, sort_order ),
-          pieces ( value, image_url )
+          pieces ( id, value, image_url )
         `)
-        .order("sort_order", { referencedTable: "countries" })
         .order("sort_order");
 
       if (error) {
@@ -38,11 +44,15 @@ export default function SetsPage() {
         countrySortOrder: s.countries?.sort_order ?? 0,
         label: s.label,
         isoCode: s.countries?.iso_code?.toLowerCase(),
-        images: Object.fromEntries((s.pieces ?? []).map((p) => [p.value, p.image_url])),
+        // pieces indexées par valeur : { "1c": { id, image_url }, ... }
+        pieces: Object.fromEntries((s.pieces ?? []).map((p) => [p.value, p])),
       }));
       formatted.sort((a, b) => a.countrySortOrder - b.countrySortOrder || a.id - b.id);
-
       setSeries(formatted);
+
+      if (user) {
+        setOwned(await getOwnedPieces(user.id));
+      }
       setStatus("ok");
     })();
   }, []);
@@ -52,13 +62,31 @@ export default function SetsPage() {
     filters.hideMissing ? "hide-missing" : "",
   ].join(" ");
 
-  function toggle(pieceKey) {
-    setOwned((prev) => ({ ...prev, [pieceKey]: !prev[pieceKey] }));
+  async function toggle(pieceId) {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    const nextOwned = !owned[pieceId];
+    // mise à jour optimiste de l'affichage
+    setOwned((prev) => ({ ...prev, [pieceId]: nextOwned }));
+
+    const success = await setPieceOwned(user.id, pieceId, nextOwned);
+    if (!success) {
+      // échec de la sauvegarde -> on annule le changement visuel
+      setOwned((prev) => ({ ...prev, [pieceId]: !nextOwned }));
+    }
   }
 
   return (
     <div>
       <h1>Sets de pièces Euro par pays</h1>
+      {!user && (
+        <p style={{ color: "var(--text-muted)", fontSize: 14 }}>
+          <a href="/login">Connectez-vous</a> pour enregistrer votre collection — sans compte, vos
+          sélections ne seront pas sauvegardées.
+        </p>
+      )}
       <DisplayFilters
         hideOwned={filters.hideOwned}
         hideMissing={filters.hideMissing}
@@ -102,16 +130,15 @@ export default function SetsPage() {
                     <small style={{ color: "var(--text-muted)" }}>{serie.label}</small>
                   </td>
                   {VALUES.map((v) => {
-                    const key = `${serie.id}-${v}`;
-                    const imageUrl = serie.images[v];
+                    const piece = serie.pieces[v];
                     return (
                       <td key={v} style={{ padding: 4, width: 80 }}>
-                        {imageUrl ? (
+                        {piece ? (
                           <CoinCell
-                            imageUrl={imageUrl}
+                            imageUrl={piece.image_url}
                             alt={`${v} ${serie.country}`}
-                            owned={!!owned[key]}
-                            onToggle={() => toggle(key)}
+                            owned={!!owned[piece.id]}
+                            onToggle={() => toggle(piece.id)}
                           />
                         ) : (
                           <span style={{ color: "var(--text-muted)" }}>—</span>
@@ -125,11 +152,6 @@ export default function SetsPage() {
           </table>
         </div>
       )}
-
-      <p style={{ color: "var(--text-muted)", fontSize: 14, marginTop: 16 }}>
-        Cliquez sur une pièce pour basculer son statut (possédée / non possédée) — la sauvegarde
-        réelle en base (Supabase) reste à brancher.
-      </p>
     </div>
   );
 }

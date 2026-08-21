@@ -112,3 +112,16 @@ supabase/
   d'erreur clair (500) si la clé manque, au lieu de casser le déploiement.
 - Il reste nécessaire d'ajouter `SUPABASE_SERVICE_ROLE_KEY` sur Vercel pour que la suppression de
   compte fonctionne réellement (voir section précédente) — mais son absence ne bloque plus le site.
+
+## Fix : la collection n'était pas sauvegardée (ajouté)
+- `app/sets/page.jsx` ne faisait que changer l'affichage local — rien n'était écrit en base.
+  Corrigé : chaque clic sur une pièce fait maintenant un `upsert`/`delete` réel dans
+  `user_collection_pieces` (via les nouvelles fonctions `setPieceOwned` / `getOwnedPieces` de
+  `lib/collectionData.js`), et la collection de l'utilisateur connecté est rechargée au
+  chargement de la page — elle persiste donc bien en changeant de page ou en se reconnectant
+- Mise à jour optimiste : le clic change la couleur immédiatement, puis annule visuellement si la
+  sauvegarde échoue (ex. session expirée)
+- Si l'utilisateur n'est pas connecté, cliquer sur une pièce redirige vers `/login` (un message
+  l'indique aussi en haut de la page)
+- `/commemoratives` utilise toujours des données d'exemple (pas d'IDs réels en base) — la
+  persistance y sera branchée une fois l'import réel des commémoratives terminé
