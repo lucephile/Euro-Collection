@@ -248,3 +248,23 @@ Le code (`/commemoratives` et `/commemoratives/[username]`) a été mis à jour 
 étiquette de ligne = "année - raison" seulement si `set.name` existe, sinon juste l'année ;
 l'info-bulle au survol utilise désormais le nom propre de la pièce (`coin.name`), plus celui du
 set (qui serait `null` ou trompeur sur les lignes génériques).
+
+## Fix : repair_commemoratives.sql à bien exécuter (rappel)
+Le tableau renvoyé après le fix précédent était identique — `supabase/repair_commemoratives.sql`
+(qui corrige à la fois les doublons de pièces ET refait la fusion "1 pays -> 1 ligne/année") doit
+être exécuté dans l'éditeur SQL Supabase si ce n'est pas déjà fait. Toutes ses étapes sont
+idempotentes (sûr de le relancer plusieurs fois).
+
+## Améliorations page /sets (ajouté)
+- `supabase/fix_single_series_label.sql` : les pays à série unique affichent maintenant
+  "1re série (2002-)" au lieu de juste "(2002-)", cohérent avec les pays multi-séries
+- Le libellé de série passe systématiquement à la ligne sous le nom du pays/drapeau (lisibilité)
+- Espacement réduit entre la colonne pays et les pièces (padding des cellules resserré)
+- Pièces affichées plus grandes (colonnes 110px au lieu de 80px) et désormais **de taille
+  uniforme** : chaque case pièce est un carré (`aspect-ratio: 1/1` + `object-fit: contain`) — les
+  centimes et les euros ont maintenant tous la même taille de case, quelle que soit la taille
+  réelle de l'image source (c'était la cause du problème signalé sur mobile)
+- La loupe "+" pour agrandir reste inchangée et fonctionne toujours
+- **Colonne pays et ligne d'en-tête (valeurs) fixes au scroll** : en scrollant horizontalement, le
+  nom du pays reste visible à gauche ; en scrollant verticalement, la ligne des valeurs (1c, 2c…)
+  reste visible en haut. Les deux pages `/sets` et `/sets/[username]` en profitent.

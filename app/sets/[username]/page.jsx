@@ -62,32 +62,37 @@ export default function PublicSetsPage() {
         Vue en lecture seule — partagez ce lien : <code>/sets/{username}</code>
       </p>
 
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ borderCollapse: "collapse", width: "100%" }}>
+      <div style={{ overflowX: "auto", maxHeight: "80vh", overflowY: "auto" }}>
+        <table className="sets-table" style={{ borderCollapse: "collapse", width: "100%" }}>
           <thead>
             <tr>
-              <th style={{ textAlign: "left", padding: 8 }}>Pays</th>
-              {VALUES.map((v) => <th key={v} style={{ padding: 8 }}>{v}</th>)}
+              <th style={{ textAlign: "left" }}>Pays</th>
+              {VALUES.map((v) => <th key={v} className="coin-col">{v}</th>)}
             </tr>
           </thead>
           <tbody>
             {series.map((serie) => (
               <tr key={serie.id}>
-                <td style={{ padding: 8, whiteSpace: "nowrap" }}>
-                  {serie.isoCode && (
-                    <img
-                      src={`https://flagcdn.com/w40/${serie.isoCode}.png`}
-                      alt=""
-                      width={20}
-                      style={{ verticalAlign: "middle", marginRight: 6 }}
-                    />
-                  )}
-                  {serie.country} <small style={{ color: "var(--text-muted)" }}>{serie.label}</small>
+                <td style={{ whiteSpace: "nowrap" }}>
+                  <div className="country-cell">
+                    <span>
+                      {serie.isoCode && (
+                        <img
+                          src={`https://flagcdn.com/w40/${serie.isoCode}.png`}
+                          alt=""
+                          width={20}
+                          style={{ verticalAlign: "middle", marginRight: 6 }}
+                        />
+                      )}
+                      {serie.country}
+                    </span>
+                    <span className="series-label">{serie.label}</span>
+                  </div>
                 </td>
                 {VALUES.map((v) => {
                   const piece = serie.pieces[v];
                   return (
-                    <td key={v} style={{ padding: 4, width: 80 }}>
+                    <td key={v} className="coin-col">
                       {piece ? (
                         <CoinCell
                           imageUrl={piece.image_url}
