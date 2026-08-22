@@ -10,8 +10,9 @@ import { getOwnedCommemoratives, setCommemorativeOwned } from "../../lib/collect
 export default function CommemorativesPage() {
   const router = useRouter();
   const [filters, setFilters] = useState({ hideOwned: false, hideMissing: false });
-  const [owned, setOwned] = useState({}); // { [commemorative_id]: true }
-  const [coins, setCoins] = useState([]);
+  const [owned, setOwned] = useState({}); // { [commemorative_coin_id]: true }
+  const [sets, setSets] = useState([]); // [{ id, year, name, coinsByCountry: {name: coin} }]
+  const [countries, setCountries] = useState([]); // colonnes, ordonnées
   const [status, setStatus] = useState("loading");
   const [user, setUser] = useState(null);
 
@@ -20,18 +21,40 @@ export default function CommemorativesPage() {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
 
+      // Un "set" = une pièce commémorative (année + raison), potentiellement émise par
+      // plusieurs pays (design commun) — chaque pays émetteur a sa propre ligne dans
+      // commemorative_coins, reliée à ce set.
       const { data, error } = await supabase
-        .from("commemorative_coins")
-        .select("id, year, name, mintage, issue_date, image_url, countries ( name, iso_code, sort_order )")
+        .from("commemorative_sets")
+        .select(`
+          id, year, name, sort_order,
+          commemorative_coins ( id, mintage, issue_date, image_url, countries ( name, iso_code, sort_order ) )
+        `)
         .order("year")
-        .order("sort_order", { referencedTable: "countries" });
+        .order("sort_order");
 
       if (error) {
         console.error(error);
         setStatus("error");
         return;
       }
-      setCoins(data ?? []);
+
+      const countriesByName = new Map();
+      (data ?? []).forEach((s) =>
+        (s.commemorative_coins ?? []).forEach((c) => {
+          if (c.countries) countriesByName.set(c.countries.name, c.countries);
+        })
+      );
+      const countryList = [...countriesByName.values()].sort((a, b) => a.sort_order - b.sort_order);
+      setCountries(countryList);
+
+      const formattedSets = (data ?? []).map((s) => ({
+        id: s.id,
+        year: s.year,
+        name: s.name,
+        coinsByCountry: Object.fromEntries((s.commemorative_coins ?? []).map((c) => [c.countries?.name, c])),
+      }));
+      setSets(formattedSets);
 
       if (user) setOwned(await getOwnedCommemoratives(user.id));
       setStatus("ok");
@@ -54,14 +77,6 @@ export default function CommemorativesPage() {
     if (!success) setOwned((prev) => ({ ...prev, [coinId]: !nextOwned }));
   }
 
-  const years = [...new Set(coins.map((c) => c.year))].sort();
-  // colonnes = tous les pays apparus, dans l'ordre de countries.sort_order
-  const countriesByName = new Map();
-  coins.forEach((c) => {
-    if (c.countries) countriesByName.set(c.countries.name, c.countries);
-  });
-  const countries = [...countriesByName.values()].sort((a, b) => a.sort_order - b.sort_order);
-
   return (
     <div>
       <h1>Pièces de 2€ commémoratives</h1>
@@ -81,8 +96,8 @@ export default function CommemorativesPage() {
       {status === "error" && (
         <p style={{ color: "#a33" }}>
           Impossible de charger les données. Vérifiez que <code>schema.sql</code>,{" "}
-          <code>import_sets.sql</code> et <code>import_commemoratives.sql</code> ont bien été
-          exécutés dans Supabase.
+          <code>import_sets.sql</code>, <code>migrate_commemorative_sets.sql</code> et{" "}
+          <code>import_commemoratives.sql</code> ont bien été exécutés, dans cet ordre.
         </p>
       )}
 
@@ -91,7 +106,7 @@ export default function CommemorativesPage() {
           <table style={{ borderCollapse: "collapse", width: "100%" }}>
             <thead>
               <tr>
-                <th style={{ textAlign: "left", padding: 8 }}>Année</th>
+                <th style={{ textAlign: "left", padding: 8 }}>Année - Raison</th>
                 {countries.map((c) => (
                   <th key={c.name} style={{ padding: 8 }}>
                     {c.iso_code && (
@@ -107,20 +122,22 @@ export default function CommemorativesPage() {
               </tr>
             </thead>
             <tbody>
-              {years.map((year) => (
-                <tr key={year}>
-                  <td style={{ padding: 8, fontWeight: 600 }}>{year}</td>
+              {sets.map((set) => (
+                <tr key={set.id}>
+                  <td style={{ padding: 8, fontWeight: 600, whiteSpace: "nowrap" }}>
+                    {set.year} - {set.name}
+                  </td>
                   {countries.map((country) => {
-                    const coin = coins.find((c) => c.year === year && c.countries?.name === country.name);
+                    const coin = set.coinsByCountry[country.name];
                     return (
                       <td key={country.name} style={{ padding: 4, width: 100 }}>
                         {coin ? (
                           <CoinCell
                             imageUrl={coin.image_url}
-                            alt={coin.name}
+                            alt={`${set.name} ${country.name}`}
                             owned={!!owned[coin.id]}
                             onToggle={() => toggle(coin.id)}
-                            info={{ name: coin.name, mintage: coin.mintage, issueDate: coin.issue_date }}
+                            info={{ name: set.name, mintage: coin.mintage, issueDate: coin.issue_date }}
                           />
                         ) : (
                           <span style={{ color: "var(--text-muted)" }}>—</span>
@@ -136,8 +153,9 @@ export default function CommemorativesPage() {
       )}
 
       <p style={{ color: "var(--text-muted)", fontSize: 14, marginTop: 16 }}>
-        Survolez une pièce pour voir son nom, son tirage et sa date d'émission. Cliquez pour la
-        marquer possédée / non possédée.
+        Chaque ligne correspond à une pièce (année - raison d'émission) ; les émissions communes à
+        plusieurs pays partagent la même ligne. Survolez une pièce pour voir son tirage et sa date
+        d'émission. Cliquez pour la marquer possédée / non possédée.
       </p>
     </div>
   );

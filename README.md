@@ -197,3 +197,30 @@ Deux causes possibles à vérifier :
 - Les colonnes (pays) et lignes (années) du tableau sont désormais générées dynamiquement à partir
   des données chargées, plutôt que codées en dur — elles s'étendront automatiquement au fur et à
   mesure de l'import des années suivantes
+
+## Adaptation : regroupement par "set" (année + raison) + import 2007-2010 (ajouté)
+Deux besoins adressés ensemble :
+1. Un même pays peut avoir plusieurs pièces différentes la même année (ex: Allemagne 2007 a une
+   pièce Länder ET une pièce Traité de Rome).
+2. Une émission commune (même design, plusieurs pays — ex: Traité de Rome 2007, EMU 2009) doit
+   apparaître sur une seule ligne "année - raison" plutôt que dispersée par pays.
+
+**Nouvelle table `commemorative_sets`** (year + name, unique) : chaque ligne du tableau
+`/commemoratives` correspond maintenant à un set, pas à une année brute. `commemorative_coins`
+pointe vers son set via `set_id` (remplace les anciennes colonnes `year`/`name`, qui vivent
+maintenant sur le set). Ceci résout les deux points : un pays avec 2 pièces la même année produit
+simplement 2 sets différents (2 lignes), et un design commun à 16 pays reste 1 seul set (1 ligne)
+avec une pièce par pays émetteur.
+
+**Fichiers à exécuter dans Supabase, DANS CET ORDRE** (si `import_sets.sql` et l'ancien
+`import_commemoratives.sql` 2004-2006 sont déjà en place) :
+1. `supabase/migrate_commemorative_sets.sql` — crée `commemorative_sets`, convertit
+   automatiquement les données 2004-2006 déjà importées (rien à ressaisir), nettoie l'ancien schéma
+2. `supabase/import_commemoratives.sql` — **remplacé** : contient maintenant 2004 à 2010 au format
+   sets (57 sets, 88 pièces au total). Si 2004-2006 est déjà migré par le script ci-dessus, ce
+   fichier ajoute uniquement 2007-2010 grâce à `on conflict (year, name) do nothing` sur les sets —
+   sûr à ré-exécuter.
+
+**Pages mises à jour** : `/commemoratives` et `/commemoratives/[username]` interrogent maintenant
+`commemorative_sets` (avec ses pièces imbriquées) au lieu de `commemorative_coins` directement.
+Colonne "Année" devient "Année - Raison".
