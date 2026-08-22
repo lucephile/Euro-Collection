@@ -1,17 +1,20 @@
 -- ============================================================
 -- Réparation complète : doublons de pièces + fusion "1 pays -> 1
 -- ligne par année" qui n'avait pas fonctionné.
--- Cause probable : import_commemoratives.sql exécuté plusieurs fois
--- pendant les tests -> pièces dupliquées -> le comptage "exactement
--- 1 pays" du script précédent ne matchait plus rien.
--- Sûr à exécuter même si vous n'êtes pas certain de l'état actuel :
--- toutes les étapes sont idempotentes (peuvent être relancées).
+-- Version robuste : les ajouts de contrainte n'annulent plus tout
+-- le script s'il reste un cas résiduel (DO blocks + exception).
+-- Sûr à exécuter plusieurs fois (idempotent).
 -- ============================================================
 
--- 1) Normalise les apostrophes dans les noms de set (certaines
---    entrées avaient une apostrophe typographique ’ au lieu de ' ,
---    ce qui créait des sets en double pour la même édition commune)
-update commemorative_sets set name = replace(name, '’', '''') where name like '%’%';
+-- 0) Retire les contraintes qui pourraient bloquer le nettoyage
+alter table commemorative_sets drop constraint if exists commemorative_sets_year_name_key;
+alter table commemorative_coins drop constraint if exists uq_set_country;
+
+-- 1) Normalise toutes les variantes d'apostrophe (’ ‘ ´ `) vers une
+--    apostrophe standard ', et supprime les espaces en trop
+update commemorative_sets
+set name = trim(regexp_replace(name, '[’‘´`]', '''', 'g'))
+where name ~ '[’‘´`]' or name <> trim(name);
 
 -- 2) Fusionne les sets devenus identiques après normalisation
 --    (même année + même nom) : déplace leurs pièces vers le plus
@@ -40,21 +43,30 @@ using dupes d
 where cs.id = any(d.all_ids) and cs.id <> d.keep_id;
 
 -- 3) Supprime les pièces en double (même set + même pays), ne garde
---    que la plus ancienne
-delete from commemorative_coins cc
-using commemorative_coins cc2
-where cc.set_id = cc2.set_id
-  and cc.country_id = cc2.country_id
-  and cc.id > cc2.id;
+--    que la plus ancienne (méthode par ctid, garantie fiable)
+delete from commemorative_coins
+where ctid not in (
+  select min(ctid) from commemorative_coins group by set_id, country_id
+);
 
--- 4) Empêche que ça se reproduise à l'avenir
-alter table commemorative_coins
-  drop constraint if exists uq_set_country;
-alter table commemorative_coins
-  add constraint uq_set_country unique (set_id, country_id);
+-- 4) Remet les contraintes — sans faire échouer tout le script s'il
+--    reste un cas imprévu (l'important, l'étape 5, s'exécutera quand
+--    même dans ce cas)
+do $$
+begin
+  alter table commemorative_sets add constraint commemorative_sets_year_name_key unique (year, name);
+exception when unique_violation then
+  raise notice 'Contrainte sets non réappliquée : doublon résiduel à examiner manuellement.';
+end $$;
+
+do $$
+begin
+  alter table commemorative_coins add constraint uq_set_country unique (set_id, country_id);
+exception when unique_violation then
+  raise notice 'Contrainte pièces non réappliquée : doublon résiduel à examiner manuellement.';
+end $$;
 
 -- 5) Refait la fusion "1 seul pays -> ligne générique de l'année"
---    (cette fois le comptage est fiable, les doublons sont partis)
 with single_country_sets as (
   select cs.id as old_set_id, cs.year
   from commemorative_sets cs
@@ -86,3 +98,10 @@ from (
   where name is not null
 ) sub
 where cs.id = sub.id;
+
+-- 7) Diagnostic : liste les doublons résiduels éventuels (devrait ne
+--    rien renvoyer si tout s'est bien passé)
+select set_id, country_id, count(*)
+from commemorative_coins
+group by set_id, country_id
+having count(*) > 1;

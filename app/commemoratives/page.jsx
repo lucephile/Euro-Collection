@@ -124,13 +124,20 @@ export default function CommemorativesPage() {
             <tbody>
               {sets.map((set) => (
                 <tr key={set.id}>
-                  <td style={{ padding: 8, fontWeight: 600, whiteSpace: "nowrap" }}>
-                    {set.name ? `${set.year} - ${set.name}` : set.year}
+                  <td style={{ padding: 8, whiteSpace: "nowrap" }}>
+                    <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.3 }}>
+                      <span style={{ fontWeight: 600 }}>{set.year}</span>
+                      {set.name && (
+                        <span style={{ fontWeight: 400, fontSize: 12, color: "var(--text-muted)" }}>
+                          {set.name}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   {countries.map((country) => {
                     const coin = set.coinsByCountry[country.name];
                     return (
-                      <td key={country.name} style={{ padding: 4, width: 100 }}>
+                      <td key={country.name} style={{ padding: 4, width: 250 }}>
                         {coin ? (
                           <CoinCell
                             imageUrl={coin.image_url}

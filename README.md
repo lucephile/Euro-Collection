@@ -268,3 +268,50 @@ idempotentes (sûr de le relancer plusieurs fois).
 - **Colonne pays et ligne d'en-tête (valeurs) fixes au scroll** : en scrollant horizontalement, le
   nom du pays reste visible à gauche ; en scrollant verticalement, la ligne des valeurs (1c, 2c…)
   reste visible en haut. Les deux pages `/sets` et `/sets/[username]` en profitent.
+
+## Fix : repair_commemoratives.sql échouait sur une contrainte (ajouté)
+La normalisation des apostrophes (étape 1) entrait en collision avec la contrainte d'unicité
+`(year, name)` avant même d'avoir pu fusionner les doublons — c'est justement cette collision
+qu'on cherche à résoudre. Le script retire maintenant la contrainte au début, fait tout le
+nettoyage, puis la remet en place avant l'étape de fusion "1 pays -> ligne générique".
+
+## Réinitialisation complète des commémoratives (ajouté)
+Après plusieurs échecs de migration incrémentale (contraintes, doublons résiduels), repartir de
+zéro s'est avéré plus fiable. `supabase/reset_commemoratives.sql` supprime et recrée
+`commemorative_sets` + `commemorative_coins` avec la structure finale correcte dès le départ (sets
+nommés pour les éditions >= 2 pays, set générique par année sinon), puis réinsère les 88 pièces
+2004-2010 déjà correctement réparties. Remplace tous les scripts de migration précédents
+(migrate_commemorative_sets.sql, fix_generic_sets.sql, add_coin_names.sql, repair_commemoratives.sql
+— obsolètes, à ignorer si le site est reparti sur cette base propre).
+
+## Lisibilité : raison sur sa propre ligne, plus petite, non grasse (ajouté)
+Dans la colonne "Année - Raison" de `/commemoratives` et `/commemoratives/[username]`, la raison
+passe maintenant systématiquement à la ligne sous l'année, en texte plus petit (12px) et normal
+(non gras) — l'année reste seule en gras. Corrige au passage `/commemoratives/[username]` qui
+n'affichait pas encore la même version corrigée (année seule sans " - " pour les lignes
+génériques) que `/commemoratives`.
+
+## Pièces 2€ agrandies x2.5 (ajouté)
+Cellules de `/commemoratives` et `/commemoratives/[username]` passées de 100px à 250px de large
+(×2.5, comme demandé) — les images de pièces (carrées, `object-fit: contain`) suivent
+automatiquement la taille de leur cellule.
+
+## Fix : Braille (2009) n'est pas une vraie édition commune (ajouté)
+- `supabase/fix_braille_set.sql` : déplace la pièce Louis Braille (Belgique + Italie, 2009) vers la
+  ligne générique 2009 — ce n'était qu'une coïncidence de nom, pas une édition coordonnée.
+- **Règle définitive pour les prochains imports (2011-2027)** : seules ces éditions ont leur propre
+  ligne, quel que soit le nombre de pays qui partagent le nom :
+  - 2007 - 50ème anniversaire du traité de Rome
+  - 2009 - 10ème anniversaire de l'Union économique et monétaire
+  - 2012 - 10 ans de l'euro
+  - 2015 - 30 ans du drapeau européen
+  - 2022 - 30 ans Erasmus
+  Toute autre pièce va sur la ligne générique de son année, même en cas de coïncidence de nom
+  entre pays. Le générateur d'import devra utiliser cette liste blanche au lieu de grouper
+  automatiquement par (année, nom) partagé par ≥ 2 pays.
+
+## Fix complémentaire : "60e anniversaire de la Déclaration Universelle des Droits de l'Homme" (2008)
+Même correction que Braille : ce n'est pas non plus dans la liste exhaustive des vraies éditions
+communes, donc coïncidence de nom (Belgique, Finlande, Italie, Portugal) -> ligne générique 2008.
+Fichier renommé `supabase/fix_coincidental_sets.sql` (couvre maintenant les deux cas identifiés
+dans les données 2004-2010 déjà importées).
