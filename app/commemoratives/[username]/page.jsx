@@ -23,7 +23,7 @@ export default function PublicCommemorativesPage() {
         .from("commemorative_sets")
         .select(`
           id, year, name, sort_order,
-          commemorative_coins ( id, mintage, issue_date, image_url, countries ( name, iso_code, sort_order ) )
+          commemorative_coins ( id, name, mintage, issue_date, image_url, countries ( name, iso_code, sort_order ) )
         `)
         .order("year")
         .order("sort_order");
@@ -99,9 +99,9 @@ export default function PublicCommemorativesPage() {
                       {coin ? (
                         <CoinCell
                           imageUrl={coin.image_url}
-                          alt={`${set.name} ${country.name}`}
+                          alt={`${coin.name} ${country.name}`}
                           owned={!!owned[coin.id]}
-                          info={{ name: set.name, mintage: coin.mintage, issueDate: coin.issue_date }}
+                          info={{ name: coin.name, mintage: coin.mintage, issueDate: coin.issue_date }}
                         />
                       ) : (
                         <span style={{ color: "var(--text-muted)" }}>—</span>

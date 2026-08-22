@@ -224,3 +224,27 @@ avec une pièce par pays émetteur.
 **Pages mises à jour** : `/commemoratives` et `/commemoratives/[username]` interrogent maintenant
 `commemorative_sets` (avec ses pièces imbriquées) au lieu de `commemorative_coins` directement.
 Colonne "Année" devient "Année - Raison".
+
+## Fix : une pièce par pays = une ligne par année, pas une ligne par pièce (ajouté)
+Le premier découpage en "sets" groupait par (année, nom) — comme chaque pièce spécifique à un
+seul pays a un nom unique, ça créait une ligne par pièce au lieu de regrouper toutes les pièces
+"un seul pays" d'une même année sur une seule ligne.
+
+**Nouvelle règle** : un set n'a une raison affichée ("année - raison") QUE s'il est partagé par
+au moins 2 pays. Sinon, toutes les pièces "un seul pays émetteur" d'une année sont rassemblées
+sur une ligne générique, étiquetée juste par l'année.
+
+**À exécuter dans Supabase, dans cet ordre** (après migrate_commemorative_sets.sql +
+import_commemoratives.sql déjà en place) :
+1. `supabase/fix_generic_sets.sql` — fusionne les sets "un seul pays" par année, laisse intactes
+   les éditions communes (Traité de Rome, EMU, etc.)
+2. `supabase/add_coin_names.sql` — **important** : la 1ère migration avait supprimé le nom propre
+   à chaque pièce (il ne vivait plus que sur le set). Ce script restaure une colonne `name` sur
+   `commemorative_coins` et la remplit pièce par pièce (via l'URL d'image, identifiant stable),
+   pour que l'info-bulle au survol affiche bien la bonne raison individuelle même sur les lignes
+   génériques.
+
+Le code (`/commemoratives` et `/commemoratives/[username]`) a été mis à jour en conséquence :
+étiquette de ligne = "année - raison" seulement si `set.name` existe, sinon juste l'année ;
+l'info-bulle au survol utilise désormais le nom propre de la pièce (`coin.name`), plus celui du
+set (qui serait `null` ou trompeur sur les lignes génériques).
