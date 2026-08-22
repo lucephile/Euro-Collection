@@ -102,8 +102,8 @@ export default function CommemorativesPage() {
       )}
 
       {status === "ok" && (
-        <div className={wrapperClass} style={{ overflowX: "auto" }}>
-          <table style={{ borderCollapse: "collapse", width: "100%" }}>
+        <div className={wrapperClass} style={{ overflowX: "auto", maxHeight: "80vh", overflowY: "auto" }}>
+          <table className="sets-table" style={{ borderCollapse: "collapse", width: "100%" }}>
             <thead>
               <tr>
                 <th style={{ textAlign: "left", padding: 8 }}>Année - Raison</th>
@@ -137,7 +137,7 @@ export default function CommemorativesPage() {
                   {countries.map((country) => {
                     const coin = set.coinsByCountry[country.name];
                     return (
-                      <td key={country.name} style={{ padding: 4, width: 250 }}>
+                      <td key={country.name} style={{ padding: 4, width: 300 }}>
                         {coin ? (
                           <CoinCell
                             imageUrl={coin.image_url}

@@ -315,3 +315,11 @@ Même correction que Braille : ce n'est pas non plus dans la liste exhaustive de
 communes, donc coïncidence de nom (Belgique, Finlande, Italie, Portugal) -> ligne générique 2008.
 Fichier renommé `supabase/fix_coincidental_sets.sql` (couvre maintenant les deux cas identifiés
 dans les données 2004-2010 déjà importées).
+
+## Améliorations /commemoratives alignées sur /sets (ajouté)
+Mêmes améliorations que sur `/sets` appliquées à `/commemoratives` et `/commemoratives/[username]` :
+- Colonne "Année - Raison" fixe à gauche au scroll horizontal
+- Ligne des drapeaux fixe en haut au scroll vertical
+- Pièces agrandies de 20% supplémentaires (250px -> 300px, soit x3 par rapport à la taille d'origine)
+Réutilise les mêmes règles CSS que `/sets` (classe `.sets-table`), donc pas de nouveau code à
+maintenir en double.
