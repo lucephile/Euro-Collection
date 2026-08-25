@@ -62,7 +62,13 @@ a:hover { color: var(--accent-hover); }
 .hide-owned .coin-cell.owned img { visibility: hidden; }
 .hide-missing .coin-cell.missing img { visibility: hidden; }
 
-/* ---------- Tableau /sets : colonne pays + en-tête fixes au scroll ---------- */
+/* ---------- Tableau /sets et /commemoratives : taille de cellule
+   RÉELLEMENT fixe (indépendante de l'écran), colonne pays + en-tête
+   fixes au scroll ---------- */
+.sets-table {
+  table-layout: fixed;
+  border-collapse: collapse;
+}
 .sets-table th, .sets-table td { padding: 4px 6px; }
 .sets-table thead th {
   position: sticky;
@@ -75,6 +81,7 @@ a:hover { color: var(--accent-hover); }
   left: 0;
   background: var(--bg-page);
   z-index: 1;
+  width: clamp(140px, 20vw, 220px);
 }
 .sets-table thead th:first-child { z-index: 3; }
 .sets-table .country-cell {
@@ -86,7 +93,17 @@ a:hover { color: var(--accent-hover); }
   color: var(--text-muted);
   font-size: 12px;
 }
-.sets-table .coin-col { width: 110px; }
+.sets-table .coin-col {
+  width: clamp(70px, 10vw, 140px);
+}
+.sets-table .coin-col-commem {
+  width: clamp(90px, 14vw, 300px);
+}
+.sets-table .header-coin-img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
 
 /* ---------- Bouton loupe + agrandissement au survol ---------- */
 .coin-cell .zoom-btn {

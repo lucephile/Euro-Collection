@@ -323,3 +323,38 @@ Mêmes améliorations que sur `/sets` appliquées à `/commemoratives` et `/comm
 - Pièces agrandies de 20% supplémentaires (250px -> 300px, soit x3 par rapport à la taille d'origine)
 Réutilise les mêmes règles CSS que `/sets` (classe `.sets-table`), donc pas de nouveau code à
 maintenir en double.
+
+## Import 2011-2015 (ajouté)
+`supabase/import_commemoratives_2011_2015.sql` : 143 pièces (2011: 16, 2012: 30, 2013: 23,
+2014: 27, 2015: 47), en appliquant strictement la liste blanche exhaustive des vraies éditions
+communes (fournie par l'utilisateur) plutôt qu'un regroupement automatique par nom partagé :
+- 2012 "Dix ans de l'euro" et 2015 "30e anniversaire du drapeau européen" obtiennent leur ligne dédiée
+- Toute autre coïncidence de nom entre pays (il n'y en a pas eu dans ce lot, mais la règle
+  s'applique) resterait sur la ligne générique de son année
+Script idempotent (on conflict do nothing sur sets et pièces). À exécuter après
+reset_commemoratives.sql (2004-2010).
+
+## Lot d'améliorations (ajouté)
+
+### Tailles de pièces responsive (min/max au lieu de fixe)
+`table-layout: fixed` était déjà en place mais avec des valeurs strictement fixes (aucune marge de
+manœuvre selon la taille d'écran). Remplacé par `clamp()` :
+- `/sets` (`.coin-col`) : entre 70px et 140px (10% de la largeur d'écran entre les deux)
+- `/commemoratives` (`.coin-col-commem`) : entre 90px et 300px (14% de la largeur d'écran)
+- Colonne pays/année (première colonne) : entre 140px et 220px
+Valeurs à ajuster ensemble si besoin — dis-moi si un des paliers ne convient pas.
+
+### En-têtes de colonnes /sets remplacés par des images
+`lib/constants.js` centralise l'URL de base des images (`COIN_IMAGES_BASE`, pointant vers le repo
+`euro-coin-images`). Les en-têtes "1c", "2c"... de `/sets` et `/sets/[username]` affichent
+maintenant une image plutôt qu'un texte, chargée depuis :
+`{COIN_IMAGES_BASE}/headers/{valeur}.webp` — donc 8 fichiers à uploader dans un dossier
+`headers/` à la racine du repo `euro-coin-images` : `1c.webp`, `2c.webp`, `5c.webp`, `10c.webp`,
+`20c.webp`, `50c.webp`, `1e.webp`, `2e.webp`.
+
+### Nouvelle page /country ("Explorer par pays")
+Sélecteur de pays (menu déroulant) ; une fois choisi, affiche sur une seule page : le tableau de
+ses séries de pièces Euro (mêmes composants que `/sets`, filtré à ce pays), puis en dessous la
+liste de ses 2€ commémoratives triées par année, avec sauvegarde de collection identique aux
+autres pages (clic pour marquer possédée/non possédée, redirection connexion si besoin). Lien
+ajouté dans le menu de navigation ("Explorer par pays").

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import CoinCell from "../../components/CoinCell";
 import DisplayFilters from "../../components/DisplayFilters";
 import { supabase } from "../../lib/supabaseClient";
+import { COIN_IMAGES_BASE } from "../../lib/constants";
 import { getOwnedPieces, setPieceOwned } from "../../lib/collectionData";
 
 const VALUES = ["1c", "2c", "5c", "10c", "20c", "50c", "1e", "2e"];
@@ -110,7 +111,14 @@ export default function SetsPage() {
               <tr>
                 <th style={{ textAlign: "left" }}>Pays</th>
                 {VALUES.map((v) => (
-                  <th key={v} className="coin-col">{v}</th>
+                  <th key={v} className="coin-col">
+                    <img
+                      className="header-coin-img"
+                      src={`${COIN_IMAGES_BASE}/headers/${v}.webp`}
+                      alt={v}
+                      title={v}
+                    />
+                  </th>
                 ))}
               </tr>
             </thead>

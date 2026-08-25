@@ -102,7 +102,7 @@ export default function PublicCommemorativesPage() {
                 {countries.map((country) => {
                   const coin = set.coinsByCountry[country.name];
                   return (
-                    <td key={country.name} style={{ padding: 4, width: 300 }}>
+                    <td key={country.name} className="coin-col-commem" style={{ padding: 4 }}>
                       {coin ? (
                         <CoinCell
                           imageUrl={coin.image_url}

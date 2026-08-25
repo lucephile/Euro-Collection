@@ -8,6 +8,7 @@ import { supabase } from "../lib/supabaseClient";
 const NAV_LINKS = [
   { href: "/", label: "Accueil" },
   { href: "/sets", label: "Sets Euro par pays" },
+  { href: "/country", label: "Explorer par pays" },
   { href: "/commemoratives", label: "2€ commémoratives" },
   { href: "/stats", label: "Mes statistiques" },
 ];
