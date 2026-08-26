@@ -358,3 +358,11 @@ ses séries de pièces Euro (mêmes composants que `/sets`, filtré à ce pays),
 liste de ses 2€ commémoratives triées par année, avec sauvegarde de collection identique aux
 autres pages (clic pour marquer possédée/non possédée, redirection connexion si besoin). Lien
 ajouté dans le menu de navigation ("Explorer par pays").
+
+## Fix : /country lecture seule + affichage /commemoratives (ajouté)
+- `/country` : retiré la possibilité de cliquer pour cocher/décocher (à la fois sur le tableau de
+  sets et sur la liste des commémoratives) — cette page reste purement une vue d'ensemble en
+  lecture seule ; la gestion de la collection reste sur `/sets` et `/commemoratives`
+- `/commemoratives` et `/commemoratives/[username]` : nouvelle classe `commem-table` pour un
+  espacement vertical plus généreux (14px au lieu de 4px) et des pièces plus grandes au minimum
+  (120px au lieu de 90px, jusqu'à 300px comme avant) — corrige le rendu tassé signalé

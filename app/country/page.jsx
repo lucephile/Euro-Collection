@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import CoinCell from "../../components/CoinCell";
 import { supabase } from "../../lib/supabaseClient";
 import { COIN_IMAGES_BASE } from "../../lib/constants";
-import { getOwnedPieces, setPieceOwned, getOwnedCommemoratives, setCommemorativeOwned } from "../../lib/collectionData";
+import { getOwnedPieces, getOwnedCommemoratives } from "../../lib/collectionData";
 
 const VALUES = ["1c", "2c", "5c", "10c", "20c", "50c", "1e", "2e"];
 
 export default function CountryPage() {
-  const router = useRouter();
   const [countries, setCountries] = useState([]);
   const [selectedSlug, setSelectedSlug] = useState("");
   const [status, setStatus] = useState("loading"); // loading | ok | error
@@ -78,22 +76,6 @@ export default function CountryPage() {
     setDetailStatus("ok");
   }
 
-  async function toggleSet(pieceId) {
-    if (!user) return router.push("/login");
-    const next = !owned[pieceId];
-    setOwned((prev) => ({ ...prev, [pieceId]: next }));
-    const success = await setPieceOwned(user.id, pieceId, next);
-    if (!success) setOwned((prev) => ({ ...prev, [pieceId]: !next }));
-  }
-
-  async function toggleCommem(coinId) {
-    if (!user) return router.push("/login");
-    const next = !owned[coinId];
-    setOwned((prev) => ({ ...prev, [coinId]: next }));
-    const success = await setCommemorativeOwned(user.id, coinId, next);
-    if (!success) setOwned((prev) => ({ ...prev, [coinId]: !next }));
-  }
-
   return (
     <div>
       <h1>Explorer par pays</h1>
@@ -150,7 +132,6 @@ export default function CountryPage() {
                                 imageUrl={piece.image_url}
                                 alt={`${v} ${serie.label}`}
                                 owned={!!owned[piece.id]}
-                                onToggle={() => toggleSet(piece.id)}
                               />
                             ) : (
                               <span style={{ color: "var(--text-muted)" }}>—</span>
@@ -177,7 +158,6 @@ export default function CountryPage() {
                     imageUrl={coin.image_url}
                     alt={coin.name}
                     owned={!!owned[coin.id]}
-                    onToggle={() => toggleCommem(coin.id)}
                     info={{ name: coin.name, mintage: coin.mintage, issueDate: coin.issue_date }}
                   />
                 </div>
