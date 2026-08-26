@@ -103,7 +103,7 @@ export default function CommemorativesPage() {
 
       {status === "ok" && (
         <div className={wrapperClass} style={{ overflowX: "auto", maxHeight: "80vh", overflowY: "auto" }}>
-          <table className="sets-table commem-table" style={{ borderCollapse: "collapse", width: "100%" }}>
+          <table className="sets-table commem-table" style={{ borderCollapse: "collapse" }}>
             <thead>
               <tr>
                 <th style={{ textAlign: "left", padding: 8 }}>Année - Raison</th>

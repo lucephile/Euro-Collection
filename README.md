@@ -366,3 +366,13 @@ ajouté dans le menu de navigation ("Explorer par pays").
 - `/commemoratives` et `/commemoratives/[username]` : nouvelle classe `commem-table` pour un
   espacement vertical plus généreux (14px au lieu de 4px) et des pièces plus grandes au minimum
   (120px au lieu de 90px, jusqu'à 300px comme avant) — corrige le rendu tassé signalé
+
+## Fix : colonnes écrasées au lieu de déborder avec scroll (ajouté)
+Bug identifié : `width: "100%"` était posé sur les `<table>` elles-mêmes (`/sets`,
+`/commemoratives` et leurs variantes `[username]`), ce qui forçait `table-layout: fixed` à
+répartir proportionnellement toutes les colonnes pour qu'elles tiennent exactement dans l'écran —
+écrasant les tailles minimales définies via `clamp()`, d'où l'affichage tassé avec plein d'espace
+inutilisé signalé. Retiré `width: "100%"` : le tableau prend maintenant sa largeur naturelle (somme
+des largeurs de colonnes), et le conteneur (`overflowX: "auto"`, déjà en place) fait apparaître une
+barre de défilement horizontale dès que ça dépasse — plus besoin de coder un slider, le
+comportement standard du navigateur s'en charge.

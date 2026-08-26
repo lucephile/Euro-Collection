@@ -64,7 +64,7 @@ export default function PublicSetsPage() {
       </p>
 
       <div style={{ overflowX: "auto", maxHeight: "80vh", overflowY: "auto" }}>
-        <table className="sets-table" style={{ borderCollapse: "collapse", width: "100%" }}>
+        <table className="sets-table" style={{ borderCollapse: "collapse" }}>
           <thead>
             <tr>
               <th style={{ textAlign: "left" }}>Pays</th>
