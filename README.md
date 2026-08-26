@@ -385,3 +385,11 @@ taille naturelle (somme des largeurs de colonnes `clamp()`), quel que soit le na
 garantit que chaque pièce garde bien sa taille minimale et que le défilement horizontal
 apparaît dès que ça dépasse, sur `/sets`, `/commemoratives`, `/country` et leurs variantes
 `[username]`.
+
+## Fix : taille des pièces (commémoratives) + largeur de page (ajouté)
+- `.coin-col-commem` : taille fixe 100x100px (au lieu d'une plage `clamp()` qui montait jusqu'à
+  300px) — suffisant maintenant que les vraies images des pièces s'affichent correctement
+- `.container` (largeur générale du site) : `max-width` retiré (était 1100px, plafonnait toutes
+  les pages sur grand écran avec de larges marges vides inutilisées, visible notamment sur
+  `/commemoratives` avec son tableau large) — le site utilise maintenant toute la largeur
+  disponible de l'écran

@@ -35,7 +35,7 @@ a:hover { color: var(--accent-hover); }
 
 .container {
   width: 100%;
-  max-width: 1100px;
+  max-width: none;
   margin: 0 auto;
   padding: 0 16px;
 }
@@ -97,7 +97,7 @@ a:hover { color: var(--accent-hover); }
   width: clamp(70px, 10vw, 140px);
 }
 .sets-table .coin-col-commem {
-  width: clamp(120px, 16vw, 300px);
+  width: 100px;
 }
 .commem-table td, .commem-table th {
   padding: 14px 8px;
