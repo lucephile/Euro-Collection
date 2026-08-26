@@ -67,7 +67,7 @@ export default function PublicCommemorativesPage() {
         Vue en lecture seule — partagez ce lien : <code>/commemoratives/{username}</code>
       </p>
 
-      <div style={{ overflowX: "auto", maxHeight: "80vh", overflowY: "auto" }}>
+      <div style={{ overflowX: "auto" }}>
         <table className="sets-table commem-table" style={{ borderCollapse: "collapse", width: "max-content" }}>
           <thead>
             <tr>

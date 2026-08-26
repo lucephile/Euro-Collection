@@ -15,7 +15,8 @@ export default function CountryPage() {
   const [detailStatus, setDetailStatus] = useState("idle"); // idle | loading | ok
   const [series, setSeries] = useState([]);
   const [commemSets, setCommemSets] = useState([]); // [{ year, name, coin }]
-  const [owned, setOwned] = useState({}); // pièces (piece_id) + commémoratives (coin_id) mélangées, ids uniques par table donc pas de collision
+  const [ownedPieces, setOwnedPieces] = useState({}); // pieces.id -> true
+  const [ownedCommems, setOwnedCommems] = useState({}); // commemorative_coins.id -> true
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -67,11 +68,12 @@ export default function CountryPage() {
     setCommemSets(commems);
 
     if (user) {
-      const [ownedPieces, ownedCommems] = await Promise.all([
+      const [ownedPiecesData, ownedCommemsData] = await Promise.all([
         getOwnedPieces(user.id),
         getOwnedCommemoratives(user.id),
       ]);
-      setOwned({ ...ownedPieces, ...ownedCommems });
+      setOwnedPieces(ownedPiecesData);
+      setOwnedCommems(ownedCommemsData);
     }
     setDetailStatus("ok");
   }
@@ -131,7 +133,7 @@ export default function CountryPage() {
                               <CoinCell
                                 imageUrl={piece.image_url}
                                 alt={`${v} ${serie.label}`}
-                                owned={!!owned[piece.id]}
+                                owned={!!ownedPieces[piece.id]}
                               />
                             ) : (
                               <span style={{ color: "var(--text-muted)" }}>—</span>
@@ -157,7 +159,7 @@ export default function CountryPage() {
                   <CoinCell
                     imageUrl={coin.image_url}
                     alt={coin.name}
-                    owned={!!owned[coin.id]}
+                    owned={!!ownedCommems[coin.id]}
                     info={{ name: coin.name, mintage: coin.mintage, issueDate: coin.issue_date }}
                   />
                 </div>

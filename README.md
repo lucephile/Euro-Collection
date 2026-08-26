@@ -393,3 +393,21 @@ apparaît dès que ça dépasse, sur `/sets`, `/commemoratives`, `/country` et l
   les pages sur grand écran avec de larges marges vides inutilisées, visible notamment sur
   `/commemoratives` avec son tableau large) — le site utilise maintenant toute la largeur
   disponible de l'écran
+
+## Fix : double scroll + collection croisée entre pays sur /country (ajouté)
+
+### Double barre de défilement vertical
+Les conteneurs de tableau (`/sets`, `/commemoratives`) avaient `maxHeight: "80vh" + overflowY:
+"auto"`, créant une zone de défilement interne séparée de celle de la page — d'où l'utilisateur
+parfois "piégé" à ne faire défiler que les pièces sans atteindre le bas du site. Retiré : le
+défilement vertical passe maintenant entièrement par la page (le défilement horizontal, lui,
+reste local au tableau via `overflowX: "auto"`, inchangé). Les colonnes/lignes fixes (sticky)
+continuent de fonctionner normalement, simplement ancrées à la fenêtre plutôt qu'à une zone interne.
+
+### Bug : mauvais statut possédé/non-possédé selon le pays sur /country
+Cause : `pieces.id` (sets) et `commemorative_coins.id` (commémoratives) sont deux séquences
+auto-incrémentées indépendantes qui peuvent parfaitement tomber sur le même nombre. Le code
+fusionnait les deux dans un seul objet `owned` — une pièce de set n°42 possédée pouvait donc faire
+apparaître comme "possédée" une pièce commémorative n°42 d'un tout autre pays, non réellement
+possédée. Corrigé : deux états séparés (`ownedPieces` / `ownedCommems`), chacun utilisé au bon
+endroit — plus de collision possible entre les deux tables.

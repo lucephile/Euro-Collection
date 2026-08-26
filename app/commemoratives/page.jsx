@@ -102,7 +102,7 @@ export default function CommemorativesPage() {
       )}
 
       {status === "ok" && (
-        <div className={wrapperClass} style={{ overflowX: "auto", maxHeight: "80vh", overflowY: "auto" }}>
+        <div className={wrapperClass} style={{ overflowX: "auto" }}>
           <table className="sets-table commem-table" style={{ borderCollapse: "collapse", width: "max-content" }}>
             <thead>
               <tr>
