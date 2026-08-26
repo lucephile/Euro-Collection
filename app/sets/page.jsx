@@ -106,7 +106,7 @@ export default function SetsPage() {
 
       {status === "ok" && (
         <div className={wrapperClass} style={{ overflowX: "auto", maxHeight: "80vh", overflowY: "auto" }}>
-          <table className="sets-table" style={{ borderCollapse: "collapse" }}>
+          <table className="sets-table" style={{ borderCollapse: "collapse", width: "max-content" }}>
             <thead>
               <tr>
                 <th style={{ textAlign: "left" }}>Pays</th>

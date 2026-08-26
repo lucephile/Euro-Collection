@@ -376,3 +376,12 @@ inutilisé signalé. Retiré `width: "100%"` : le tableau prend maintenant sa la
 des largeurs de colonnes), et le conteneur (`overflowX: "auto"`, déjà en place) fait apparaître une
 barre de défilement horizontale dès que ça dépasse — plus besoin de coder un slider, le
 comportement standard du navigateur s'en charge.
+
+## Fix (suite) : le tableau ne s'étendait toujours pas (ajouté)
+Retirer `width: "100%"` seul n'a pas suffi — le comportement de `table-layout: fixed` avec
+`width: auto` reste ambigu/dépendant du navigateur pour forcer un tableau à dépasser son
+conteneur. Remplacé par `width: "max-content"`, qui force explicitement le tableau à prendre sa
+taille naturelle (somme des largeurs de colonnes `clamp()`), quel que soit le navigateur —
+garantit que chaque pièce garde bien sa taille minimale et que le défilement horizontal
+apparaît dès que ça dépasse, sur `/sets`, `/commemoratives`, `/country` et leurs variantes
+`[username]`.

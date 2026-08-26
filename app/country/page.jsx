@@ -106,7 +106,7 @@ export default function CountryPage() {
         <>
           <h2>Sets de pièces Euro</h2>
           <div style={{ overflowX: "auto" }}>
-            <table className="sets-table" style={{ borderCollapse: "collapse" }}>
+            <table className="sets-table" style={{ borderCollapse: "collapse", width: "max-content" }}>
               <thead>
                 <tr>
                   <th style={{ textAlign: "left" }}>Série</th>
