@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import CoinCell from "../../../components/CoinCell";
+import TableScrollWrapper from "../../../components/TableScrollWrapper";
 import { supabase } from "../../../lib/supabaseClient";
 import { COIN_IMAGES_BASE } from "../../../lib/constants";
 import { getProfileByUsername, getOwnedPieces } from "../../../lib/collectionData";
@@ -63,7 +64,7 @@ export default function PublicSetsPage() {
         Vue en lecture seule — partagez ce lien : <code>/sets/{username}</code>
       </p>
 
-      <div style={{ overflowX: "auto" }}>
+      <TableScrollWrapper>
         <table className="sets-table" style={{ borderCollapse: "collapse", width: "max-content" }}>
           <thead>
             <tr>
@@ -114,7 +115,7 @@ export default function PublicSetsPage() {
             ))}
           </tbody>
         </table>
-      </div>
+      </TableScrollWrapper>
     </div>
   );
 }

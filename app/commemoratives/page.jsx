@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import CoinCell from "../../components/CoinCell";
+import TableScrollWrapper from "../../components/TableScrollWrapper";
 import DisplayFilters from "../../components/DisplayFilters";
 import { supabase } from "../../lib/supabaseClient";
+import { NATIVE_NAMES } from "../../lib/constants";
 import { getOwnedCommemoratives, setCommemorativeOwned } from "../../lib/collectionData";
 
 export default function CommemorativesPage() {
@@ -28,7 +30,7 @@ export default function CommemorativesPage() {
         .from("commemorative_sets")
         .select(`
           id, year, name, sort_order,
-          commemorative_coins ( id, name, mintage, issue_date, image_url, countries ( name, iso_code, sort_order ) )
+          commemorative_coins ( id, name, mintage, issue_date, image_url, countries ( name, slug, iso_code, sort_order ) )
         `)
         .order("year")
         .order("sort_order");
@@ -102,13 +104,13 @@ export default function CommemorativesPage() {
       )}
 
       {status === "ok" && (
-        <div className={wrapperClass} style={{ overflowX: "auto" }}>
+        <TableScrollWrapper className={wrapperClass}>
           <table className="sets-table commem-table" style={{ borderCollapse: "collapse", width: "max-content" }}>
             <thead>
               <tr>
                 <th style={{ textAlign: "left", padding: 8 }}>Année - Raison</th>
                 {countries.map((c) => (
-                  <th key={c.name} style={{ padding: 8 }}>
+                  <th key={c.name} style={{ padding: 8, fontWeight: 400 }}>
                     {c.iso_code && (
                       <img
                         src={`https://flagcdn.com/w40/${c.iso_code.toLowerCase()}.png`}
@@ -117,6 +119,12 @@ export default function CommemorativesPage() {
                         width={20}
                       />
                     )}
+                    <div style={{ fontSize: 10, lineHeight: 1.2, marginTop: 2 }}>
+                      <div>{c.name}</div>
+                      {NATIVE_NAMES[c.slug] && (
+                        <div style={{ color: "var(--text-muted)", fontStyle: "italic" }}>{NATIVE_NAMES[c.slug]}</div>
+                      )}
+                    </div>
                   </th>
                 ))}
               </tr>
@@ -156,7 +164,7 @@ export default function CommemorativesPage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </TableScrollWrapper>
       )}
 
       <p style={{ color: "var(--text-muted)", fontSize: 14, marginTop: 16 }}>

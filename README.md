@@ -411,3 +411,25 @@ fusionnait les deux dans un seul objet `owned` — une pièce de set n°42 poss�
 apparaître comme "possédée" une pièce commémorative n°42 d'un tout autre pays, non réellement
 possédée. Corrigé : deux états séparés (`ownedPieces` / `ownedCommems`), chacun utilisé au bon
 endroit — plus de collision possible entre les deux tables.
+
+## Barre de défilement horizontale permanente + noms de pays natifs (ajouté)
+
+### Barre de défilement toujours accessible
+Nouveau composant `components/TableScrollWrapper.jsx` : ajoute une seconde barre de défilement
+fine, synchronisée avec le tableau, collée en bas de l'écran (`position: sticky`) tant que le
+tableau reste visible — plus besoin de descendre tout en bas d'une page très longue pour pouvoir
+défiler horizontalement. Utilisé sur `/sets`, `/sets/[username]`, `/commemoratives` et
+`/commemoratives/[username]`.
+(Nettoyage au passage : un composant redondant `HScrollSync.jsx`, créé par erreur plus tôt dans la
+même session, a été supprimé au profit de celui-ci.)
+
+### Nom des pays dans leur langue d'origine
+`lib/constants.js` contient maintenant `NATIVE_NAMES` (ex: allemagne → "Deutschland"). Affiché en
+petit sous le drapeau, sous le nom français, dans l'en-tête de colonne de `/commemoratives` et
+`/commemoratives/[username]`.
+
+### Bandeau de nav + en-tête de tableau fixes (déjà en place)
+Vérifié que ces deux points, demandés dans ce même message, étaient déjà implémentés lors d'un
+tour précédent : le bandeau de navigation est `position: sticky; top: 0` sur toutes les pages, et
+l'en-tête du tableau (valeurs/drapeaux) est fixé juste en dessous (`top: 57px`, soit la hauteur du
+bandeau) plutôt que de s'y superposer.

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import CoinCell from "../../components/CoinCell";
+import TableScrollWrapper from "../../components/TableScrollWrapper";
 import DisplayFilters from "../../components/DisplayFilters";
 import { supabase } from "../../lib/supabaseClient";
 import { COIN_IMAGES_BASE } from "../../lib/constants";
@@ -105,7 +106,7 @@ export default function SetsPage() {
       )}
 
       {status === "ok" && (
-        <div className={wrapperClass} style={{ overflowX: "auto" }}>
+        <TableScrollWrapper className={wrapperClass}>
           <table className="sets-table" style={{ borderCollapse: "collapse", width: "max-content" }}>
             <thead>
               <tr>
@@ -162,7 +163,7 @@ export default function SetsPage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </TableScrollWrapper>
       )}
     </div>
   );

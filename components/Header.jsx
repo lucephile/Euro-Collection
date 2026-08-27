@@ -26,7 +26,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header style={{ background: "var(--bg-header)", borderBottom: "1px solid #e8dfc0" }}>
+    <header style={{ background: "var(--bg-header)", borderBottom: "1px solid #e8dfc0", position: "sticky", top: 0, zIndex: 50 }}>
       <div className="container" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 56 }}>
         <Link href="/" style={{ fontWeight: 700, color: "var(--text-main)" }}>
           🪙 Suivi Pièces Euro

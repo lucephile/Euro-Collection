@@ -72,7 +72,7 @@ a:hover { color: var(--accent-hover); }
 .sets-table th, .sets-table td { padding: 4px 6px; }
 .sets-table thead th {
   position: sticky;
-  top: 0;
+  top: 57px; /* juste sous le bandeau de navigation (56px de haut + 1px de bordure) */
   background: var(--bg-page);
   z-index: 2;
 }
