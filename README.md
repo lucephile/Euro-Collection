@@ -455,3 +455,21 @@ défilement normalement (juste sans double affichage).
 Doublés comme demandé : drapeaux de 20px à 40px, texte de 10px à 20px. Les noms les plus longs
 (ex: Belgique dans ses 3 langues) passeront sur plusieurs lignes dans la cellule — signale si la
 largeur de colonne doit aussi être ajustée en conséquence.
+
+## Fix définitif : en-tête fixe + défilement horizontal (ajouté)
+Le fix précédent (`overflowY: "visible"`) n'avait aucun effet réel : en CSS, dès qu'un axe
+(`overflow-x`) passe à une valeur autre que `visible`, l'autre axe est automatiquement forcé à
+`auto` en interne — même écrit "visible" explicitement, impossible d'empêcher ce comportement.
+Ça cassait la référence utilisée par `position: sticky` pour la ligne d'en-tête.
+
+**Solution définitive** : `TableScrollWrapper` sépare maintenant l'en-tête et le corps du tableau
+en deux `<table>` distincts (technique standard des grilles de données avec en-tête fixe) :
+- L'en-tête (`headerRow`) vit dans un `<div>` séparé, fixé sous le bandeau de nav
+  (`position: sticky; top: 57px`), sans défilement propre
+- Le corps (les lignes) défile horizontalement normalement
+- Les deux, plus la barre de défilement collée en bas, sont synchronisés en JavaScript
+  (`scrollLeft` répercuté entre les trois)
+
+Toutes les pages concernées (`/sets`, `/sets/[username]`, `/commemoratives`,
+`/commemoratives/[username]`) ont été adaptées pour passer leur ligne d'en-tête via la nouvelle
+prop `headerRow`, et leurs lignes de données directement en enfants du composant.

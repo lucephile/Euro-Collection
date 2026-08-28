@@ -69,65 +69,63 @@ export default function PublicCommemorativesPage() {
         Vue en lecture seule — partagez ce lien : <code>/commemoratives/{username}</code>
       </p>
 
-      <TableScrollWrapper>
-        <table className="sets-table commem-table" style={{ borderCollapse: "collapse", width: "max-content" }}>
-          <thead>
-            <tr>
-              <th style={{ textAlign: "left", padding: 8 }}>Année - Raison</th>
-              {countries.map((c) => (
-                <th key={c.name} style={{ padding: 8, fontWeight: 400 }}>
-                  {c.iso_code && (
-                    <img
-                      src={`https://flagcdn.com/w40/${c.iso_code.toLowerCase()}.png`}
-                      alt={c.name}
-                      title={c.name}
-                      width={40}
-                    />
+      <TableScrollWrapper
+        tableClassName="sets-table commem-table"
+        headerRow={
+          <>
+            <th style={{ textAlign: "left", padding: 8 }}>Année - Raison</th>
+            {countries.map((c) => (
+              <th key={c.name} style={{ padding: 8, fontWeight: 400 }}>
+                {c.iso_code && (
+                  <img
+                    src={`https://flagcdn.com/w40/${c.iso_code.toLowerCase()}.png`}
+                    alt={c.name}
+                    title={c.name}
+                    width={40}
+                  />
+                )}
+                <div style={{ fontSize: 20, lineHeight: 1.2, marginTop: 4 }}>
+                  <div>{c.name}</div>
+                  {NATIVE_NAMES[c.slug] && (
+                    <div style={{ color: "var(--text-muted)", fontStyle: "italic" }}>{NATIVE_NAMES[c.slug]}</div>
                   )}
-                  <div style={{ fontSize: 20, lineHeight: 1.2, marginTop: 4 }}>
-                    <div>{c.name}</div>
-                    {NATIVE_NAMES[c.slug] && (
-                      <div style={{ color: "var(--text-muted)", fontStyle: "italic" }}>{NATIVE_NAMES[c.slug]}</div>
-                    )}
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {sets.map((set) => (
-              <tr key={set.id}>
-                <td style={{ padding: 8, whiteSpace: "nowrap" }}>
-                  <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.3 }}>
-                    <span style={{ fontWeight: 600 }}>{set.year}</span>
-                    {set.name && (
-                      <span style={{ fontWeight: 400, fontSize: 12, color: "var(--text-muted)" }}>
-                        {set.name}
-                      </span>
-                    )}
-                  </div>
-                </td>
-                {countries.map((country) => {
-                  const coin = set.coinsByCountry[country.name];
-                  return (
-                    <td key={country.name} className="coin-col-commem" style={{ padding: 4 }}>
-                      {coin ? (
-                        <CoinCell
-                          imageUrl={coin.image_url}
-                          alt={`${coin.name} ${country.name}`}
-                          owned={!!owned[coin.id]}
-                          info={{ name: coin.name, mintage: coin.mintage, issueDate: coin.issue_date }}
-                        />
-                      ) : (
-                        <span style={{ color: "var(--text-muted)" }}>—</span>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
+                </div>
+              </th>
             ))}
-          </tbody>
-        </table>
+          </>
+        }
+      >
+        {sets.map((set) => (
+          <tr key={set.id}>
+            <td style={{ padding: 8, whiteSpace: "nowrap" }}>
+              <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.3 }}>
+                <span style={{ fontWeight: 600 }}>{set.year}</span>
+                {set.name && (
+                  <span style={{ fontWeight: 400, fontSize: 12, color: "var(--text-muted)" }}>
+                    {set.name}
+                  </span>
+                )}
+              </div>
+            </td>
+            {countries.map((country) => {
+              const coin = set.coinsByCountry[country.name];
+              return (
+                <td key={country.name} className="coin-col-commem" style={{ padding: 4 }}>
+                  {coin ? (
+                    <CoinCell
+                      imageUrl={coin.image_url}
+                      alt={`${coin.name} ${country.name}`}
+                      owned={!!owned[coin.id]}
+                      info={{ name: coin.name, mintage: coin.mintage, issueDate: coin.issue_date }}
+                    />
+                  ) : (
+                    <span style={{ color: "var(--text-muted)" }}>—</span>
+                  )}
+                </td>
+              );
+            })}
+          </tr>
+        ))}
       </TableScrollWrapper>
     </div>
   );

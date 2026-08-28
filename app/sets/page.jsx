@@ -106,63 +106,62 @@ export default function SetsPage() {
       )}
 
       {status === "ok" && (
-        <TableScrollWrapper className={wrapperClass}>
-          <table className="sets-table" style={{ borderCollapse: "collapse", width: "max-content" }}>
-            <thead>
-              <tr>
-                <th style={{ textAlign: "left" }}>Pays</th>
-                {VALUES.map((v) => (
-                  <th key={v} className="coin-col">
-                    <img
-                      className="header-coin-img"
-                      src={`${COIN_IMAGES_BASE}/headers/${v}.webp`}
-                      alt={v}
-                      title={v}
-                    />
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {series.map((serie) => (
-                <tr key={serie.id}>
-                  <td style={{ whiteSpace: "nowrap" }}>
-                    <div className="country-cell">
-                      <span>
-                        {serie.isoCode && (
-                          <img
-                            src={`https://flagcdn.com/w40/${serie.isoCode}.png`}
-                            alt=""
-                            width={20}
-                            style={{ verticalAlign: "middle", marginRight: 6 }}
-                          />
-                        )}
-                        {serie.country}
-                      </span>
-                      <span className="series-label">{serie.label}</span>
-                    </div>
-                  </td>
-                  {VALUES.map((v) => {
-                    const piece = serie.pieces[v];
-                    return (
-                      <td key={v} className="coin-col">
-                        {piece ? (
-                          <CoinCell
-                            imageUrl={piece.image_url}
-                            alt={`${v} ${serie.country}`}
-                            owned={!!owned[piece.id]}
-                            onToggle={() => toggle(piece.id)}
-                          />
-                        ) : (
-                          <span style={{ color: "var(--text-muted)" }}>—</span>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
+        <TableScrollWrapper
+          className={wrapperClass}
+          tableClassName="sets-table"
+          headerRow={
+            <>
+              <th style={{ textAlign: "left" }}>Pays</th>
+              {VALUES.map((v) => (
+                <th key={v} className="coin-col">
+                  <img
+                    className="header-coin-img"
+                    src={`${COIN_IMAGES_BASE}/headers/${v}.webp`}
+                    alt={v}
+                    title={v}
+                  />
+                </th>
               ))}
-            </tbody>
-          </table>
+            </>
+          }
+        >
+          {series.map((serie) => (
+            <tr key={serie.id}>
+              <td style={{ whiteSpace: "nowrap" }}>
+                <div className="country-cell">
+                  <span>
+                    {serie.isoCode && (
+                      <img
+                        src={`https://flagcdn.com/w40/${serie.isoCode}.png`}
+                        alt=""
+                        width={20}
+                        style={{ verticalAlign: "middle", marginRight: 6 }}
+                      />
+                    )}
+                    {serie.country}
+                  </span>
+                  <span className="series-label">{serie.label}</span>
+                </div>
+              </td>
+              {VALUES.map((v) => {
+                const piece = serie.pieces[v];
+                return (
+                  <td key={v} className="coin-col">
+                    {piece ? (
+                      <CoinCell
+                        imageUrl={piece.image_url}
+                        alt={`${v} ${serie.country}`}
+                        owned={!!owned[piece.id]}
+                        onToggle={() => toggle(piece.id)}
+                      />
+                    ) : (
+                      <span style={{ color: "var(--text-muted)" }}>—</span>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
         </TableScrollWrapper>
       )}
     </div>
