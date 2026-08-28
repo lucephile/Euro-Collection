@@ -105,7 +105,29 @@ a:hover { color: var(--accent-hover); }
 .sets-table .header-coin-img {
   width: 100%;
   height: auto;
+  aspect-ratio: 1 / 1;
   display: block;
+}
+
+/* Masque la barre de défilement native du navigateur sur le tableau —
+   seule la barre synchronisée de TableScrollWrapper reste visible,
+   pour éviter d'avoir les deux en même temps en bas du tableau */
+.hide-native-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* vieux Edge/IE */
+}
+.hide-native-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, nouveaux Edge */
+}
+
+/* Cache la barre de défilement native de la zone de contenu du tableau —
+   seule la barre synchronisée en bas d'écran (TableScrollWrapper) reste visible */
+.hide-native-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Edge legacy */
+}
+.hide-native-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
 }
 
 /* ---------- Bouton loupe + agrandissement au survol ---------- */

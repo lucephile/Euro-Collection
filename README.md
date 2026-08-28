@@ -433,3 +433,25 @@ Vérifié que ces deux points, demandés dans ce même message, étaient déjà 
 tour précédent : le bandeau de navigation est `position: sticky; top: 0` sur toutes les pages, et
 l'en-tête du tableau (valeurs/drapeaux) est fixé juste en dessous (`top: 57px`, soit la hauteur du
 bandeau) plutôt que de s'y superposer.
+
+## Fix : sticky header coupé + double scrollbar + taille noms de pays (ajouté)
+
+### En-tête de tableau coupé/comportement sticky cassé
+Cause trouvée : `overflow-x: auto` sur la zone de tableau force implicitement `overflow-y` à
+`auto` si non précisé (comportement standard CSS) — ça créait sans le vouloir un nouveau contexte
+de défilement vertical propre à cette zone, cassant la référence utilisée par `position: sticky`
+pour la ligne d'en-tête (valeurs/pièces), d'où le rendu coupé observé après les dernières
+modifications. Corrigé : `overflowY: "visible"` explicite dans `TableScrollWrapper` — l'en-tête
+(zone verte de ton schéma) se fixe maintenant correctement juste sous le bandeau de nav pendant que
+les lignes de pays défilent en dessous, exactement comme voulu.
+
+### Barre de défilement horizontale en double
+La barre native du navigateur (au bas de la zone de tableau elle-même) restait visible en plus de
+la nouvelle barre synchronisée collée à l'écran. Masquée via CSS (`.hide-native-scrollbar`,
+cross-navigateurs) — seule la barre synchronisée reste visible, la zone garde sa capacité de
+défilement normalement (juste sans double affichage).
+
+### Drapeaux et noms de pays agrandis (/commemoratives)
+Doublés comme demandé : drapeaux de 20px à 40px, texte de 10px à 20px. Les noms les plus longs
+(ex: Belgique dans ses 3 langues) passeront sur plusieurs lignes dans la cellule — signale si la
+largeur de colonne doit aussi être ajustée en conséquence.

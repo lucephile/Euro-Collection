@@ -45,7 +45,12 @@ export default function TableScrollWrapper({ children, className }) {
 
   return (
     <div>
-      <div ref={contentRef} onScroll={onContentScroll} className={className} style={{ overflowX: "auto" }}>
+      <div
+        ref={contentRef}
+        onScroll={onContentScroll}
+        className={`hide-native-scrollbar ${className ?? ""}`}
+        style={{ overflowX: "auto", overflowY: "visible" }}
+      >
         {children}
       </div>
       <div
