@@ -473,3 +473,17 @@ en deux `<table>` distincts (technique standard des grilles de données avec en-
 Toutes les pages concernées (`/sets`, `/sets/[username]`, `/commemoratives`,
 `/commemoratives/[username]`) ont été adaptées pour passer leur ligne d'en-tête via la nouvelle
 prop `headerRow`, et leurs lignes de données directement en enfants du composant.
+
+## Fix : alignement en-tête/colonnes + centrage + colonne Année responsive (ajouté)
+- **Désalignement pays/colonnes sur /commemoratives** : cause — l'en-tête et le corps du tableau
+  étant maintenant deux `<table>` distinctes, chacune calcule sa propre largeur de colonne
+  indépendamment (`table-layout: fixed`) ; l'en-tête n'avait pas la classe `coin-col-commem` fixant
+  100px, donc il se dimensionnait selon son propre contenu (drapeaux + texte agrandis). Ajouté la
+  classe manquante sur les `<th>` pays.
+- **"—" centrés** : `text-align: center` ajouté aux classes `.coin-col` et `.coin-col-commem`.
+- **Colonne "Année - Raison" plus étroite sur mobile** : largeur minimale réduite (90px au lieu de
+  140px, spécifique à `/commemoratives` via `.commem-table`, sans toucher `/sets`) ; le
+  `white-space: nowrap` qui empêchait le retour à la ligne a été retiré — les raisons longues
+  (éditions communes) passent maintenant sur plusieurs lignes au lieu d'élargir la colonne.
+- `supabase/shorten_uem_name.sql` : raccourcit "10ème anniversaire de l'Union économique et
+  monétaire" en "10ème anniversaire de l'UEM" — à exécuter dans Supabase.

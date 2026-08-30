@@ -111,7 +111,7 @@ export default function CommemorativesPage() {
             <>
               <th style={{ textAlign: "left", padding: 8 }}>Année - Raison</th>
               {countries.map((c) => (
-                <th key={c.name} style={{ padding: 8, fontWeight: 400 }}>
+                <th key={c.name} className="coin-col-commem" style={{ padding: 8, fontWeight: 400 }}>
                   {c.iso_code && (
                     <img
                       src={`https://flagcdn.com/w40/${c.iso_code.toLowerCase()}.png`}
@@ -133,7 +133,7 @@ export default function CommemorativesPage() {
         >
           {sets.map((set) => (
             <tr key={set.id}>
-              <td style={{ padding: 8, whiteSpace: "nowrap" }}>
+              <td style={{ padding: 8 }}>
                 <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.3 }}>
                   <span style={{ fontWeight: 600 }}>{set.year}</span>
                   {set.name && (

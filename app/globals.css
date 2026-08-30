@@ -81,6 +81,11 @@ a:hover { color: var(--accent-hover); }
   width: clamp(140px, 20vw, 220px);
 }
 .sets-table thead th:first-child { z-index: 3; }
+/* Colonne Année - Raison sur /commemoratives : plus étroite sur mobile,
+   les raisons longues (éditions communes) passent à la ligne à la place */
+.commem-table td:first-child, .commem-table th:first-child {
+  width: clamp(90px, 18vw, 220px);
+}
 .sets-table .country-cell {
   display: flex;
   flex-direction: column;
@@ -92,9 +97,11 @@ a:hover { color: var(--accent-hover); }
 }
 .sets-table .coin-col {
   width: clamp(70px, 10vw, 140px);
+  text-align: center;
 }
 .sets-table .coin-col-commem {
   width: 100px;
+  text-align: center;
 }
 .commem-table td, .commem-table th {
   padding: 14px 8px;
