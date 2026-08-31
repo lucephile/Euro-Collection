@@ -487,3 +487,18 @@ prop `headerRow`, et leurs lignes de données directement en enfants du composan
   (éditions communes) passent maintenant sur plusieurs lignes au lieu d'élargir la colonne.
 - `supabase/shorten_uem_name.sql` : raccourcit "10ème anniversaire de l'Union économique et
   monétaire" en "10ème anniversaire de l'UEM" — à exécuter dans Supabase.
+
+## Fix : désalignement mobile + retour à la ligne fiable (ajouté)
+Cause commune aux deux problèmes signalés : la largeur de la colonne "Année - Raison" utilisait
+`clamp()` avec une unité `vw` (pourcentage de la largeur d'écran). Comme l'en-tête et le corps du
+tableau sont deux `<table>` séparées calculées indépendamment, de légers écarts d'arrondi entre les
+deux ont fini par désaligner les colonnes suivantes (Vatican sorti de l'écran sur mobile) — et la
+largeur réellement obtenue restait parfois trop large pour forcer le retour à la ligne des raisons
+longues. Remplacé par une largeur fixe stricte de 110px (aucune unité `vw`), identique des deux
+côtés — garantit l'alignement pixel-parfait et un retour à la ligne fiable et prévisible pour :
+2007 (Traité de Rome), 2009 (UEM), 2012 (Dix ans de l'euro), 2015 (drapeau européen), 2022
+(Erasmus).
+
+Pour "2009 - 10ème anniversaire de l'UEM" : c'est une donnée en base, pas du code — le script
+`supabase/shorten_uem_name.sql` (déjà fourni) fait exactement ce raccourci ; à exécuter dans
+Supabase s'il ne l'a pas encore été.
