@@ -509,3 +509,23 @@ Le drapeau (40px) + texte agrandi (20px) demandés précédemment dépassaient d
 débordait visuellement, même si la grille elle-même était correcte). Réduit à 28px (drapeau) /
 11px (texte) : tient maintenant proprement dans la même largeur de colonne que les pièces
 en dessous, aligné pays par pays.
+
+## Page /stats branchée sur les vraies données + valeur de collection (ajouté)
+La page utilisait encore entièrement des données d'exemple (jamais branchée depuis le début du
+projet) — corrigé en même temps que la demande sur la valeur de la collection, puisque l'une ne
+faisait pas sens sans l'autre :
+- **Sets par valeur** et **commémoratives par pays** : vraies statistiques (possédé / recherché /
+  %) calculées depuis Supabase, plus des données d'exemple
+- **Valeur estimée de la collection** (nouveau) :
+  - Valeur faciale (sets + commémoratives) : calcul instantané, aucune donnée externe (1c=0,01€ …
+    2€ commémorative=2€)
+  - Valeur de revente estimée des commémoratives : somme de la colonne `quotation`, déjà en base
+    depuis l'import initial (mais figée à ce moment-là, pas encore automatiquement rafraîchie)
+- Redirection vers `/login` si non connecté
+- Lien de partage utilise maintenant le vrai pseudo de l'utilisateur (au lieu du texte générique
+  "votre-pseudo")
+
+**Prochaine étape (mise à jour automatique de la cotation)** : nécessite la création d'une clé API
+Numista par l'utilisateur, puis un travail de correspondance pièce par pièce avec le catalogue
+Numista, avant de pouvoir mettre en place le rafraîchissement automatique (Vercel Cron). Non fait
+dans ce lot.
