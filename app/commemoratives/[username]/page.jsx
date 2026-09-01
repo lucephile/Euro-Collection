@@ -81,10 +81,10 @@ export default function PublicCommemorativesPage() {
                     src={`https://flagcdn.com/w40/${c.iso_code.toLowerCase()}.png`}
                     alt={c.name}
                     title={c.name}
-                    width={40}
+                    width={28}
                   />
                 )}
-                <div style={{ fontSize: 20, lineHeight: 1.2, marginTop: 4 }}>
+                <div style={{ fontSize: 11, lineHeight: 1.15, marginTop: 3 }}>
                   <div>{c.name}</div>
                   {NATIVE_NAMES[c.slug] && (
                     <div style={{ color: "var(--text-muted)", fontStyle: "italic" }}>{NATIVE_NAMES[c.slug]}</div>

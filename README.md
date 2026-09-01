@@ -502,3 +502,10 @@ côtés — garantit l'alignement pixel-parfait et un retour à la ligne fiable 
 Pour "2009 - 10ème anniversaire de l'UEM" : c'est une donnée en base, pas du code — le script
 `supabase/shorten_uem_name.sql` (déjà fourni) fait exactement ce raccourci ; à exécuter dans
 Supabase s'il ne l'a pas encore été.
+
+## Fix : contenu d'en-tête trop grand pour la colonne (ajouté)
+Le drapeau (40px) + texte agrandi (20px) demandés précédemment dépassaient de la colonne fixe de
+100px partagée avec le tableau des pièces — donnant une impression de désalignement (le contenu
+débordait visuellement, même si la grille elle-même était correcte). Réduit à 28px (drapeau) /
+11px (texte) : tient maintenant proprement dans la même largeur de colonne que les pièces
+en dessous, aligné pays par pays.

@@ -17,7 +17,7 @@ import { useEffect, useRef, useState } from "react";
  * position de défilement horizontal est synchronisée en JS, ainsi qu'avec
  * la barre de défilement collée en bas de l'écran.
  */
-export default function TableScrollWrapper({ headerRow, children, className, tableClassName }) {
+export default function TableScrollWrapper({ headerRow, children, className, tableClassName, tableWidth }) {
   const bodyRef = useRef(null);
   const headerRef = useRef(null);
   const barRef = useRef(null);
