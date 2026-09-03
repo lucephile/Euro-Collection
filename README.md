@@ -529,3 +529,49 @@ faisait pas sens sans l'autre :
 Numista par l'utilisateur, puis un travail de correspondance pièce par pièce avec le catalogue
 Numista, avant de pouvoir mettre en place le rafraîchissement automatique (Vercel Cron). Non fait
 dans ce lot.
+
+## Correspondance Numista (en cours)
+- `supabase/add_numista_id.sql` : ajoute `numista_id` et `quotation_updated_at` à
+  `commemorative_coins`
+- `scripts/match_numista.py` : interroge l'API Numista pour chacune des 613 pièces
+  commémoratives, écrit un rapport `numista_matches.csv` (5 candidats par pièce) à valider
+  manuellement — n'écrit rien en base automatiquement. Prévoir un essai limité (`TEST_LIMIT = 10`)
+  avant le traitement complet.
+
+## Correspondances Numista importées (ajouté)
+`supabase/import_numista_ids.sql` : 612 pièces sur 613 associées à leur identifiant Numista
+(`numista_id`), validées manuellement par l'utilisateur à partir du rapport généré. Seule
+l'Allemagne 2027 reste sans correspondance (pièce trop récente, pas encore au catalogue Numista).
+À exécuter après `add_numista_id.sql`.
+
+Prochaine étape : construire le job de rafraîchissement automatique (Vercel Cron) qui interroge
+l'API Numista via ces identifiants pour mettre à jour `quotation` périodiquement.
+
+## Rafraîchissement automatique des cotations (ajouté)
+
+### Ce qui est en place
+- `app/api/refresh-quotations/route.js` : traite un lot de 50 pièces par exécution (les plus
+  anciennement mises à jour en priorité), interroge l'API Numista pour chacune, et met à jour
+  `quotation` + `quotation_updated_at`. Concurrence de 10 requêtes en parallèle pour rester dans
+  les limites de temps d'exécution Vercel.
+- `vercel.json` : programme ce job **tous les jours à 3h du matin (UTC)**. Avec un lot de 50/jour,
+  un cycle complet sur les 612 pièces prend environ 12-13 jours — proche de "toutes les 2
+  semaines" comme demandé. (Augmenter `BATCH_SIZE` dans le fichier si ton plan Vercel autorise des
+  fonctions plus longues que 10s.)
+
+### ⚠️ Étape de calibration nécessaire avant d'activer pour de vrai
+Je n'ai jamais pu appeler l'API Numista moi-même (domaine hors de mon accès réseau), donc la
+fonction `extractQuotation()` qui extrait le prix de la réponse est une **best guess** basée sur
+la structure habituelle de ce genre de catalogue — pas garantie exacte.
+
+**Variables d'environnement à ajouter sur Vercel avant tout test :**
+- `NUMISTA_API_KEY` — ta clé Numista
+- `CRON_SECRET` — une chaîne aléatoire de ton choix (protège l'endpoint contre les appels publics)
+
+**Test à faire une fois déployé**, en visitant dans le navigateur (remplace les valeurs) :
+```
+https://ton-site.vercel.app/api/refresh-quotations?dryRun=true&limit=3&secret=TON_CRON_SECRET
+```
+`dryRun=true` ne modifie rien en base — ça renvoie juste la réponse brute de Numista pour 3
+pièces. Envoie-moi ce résultat JSON pour que j'ajuste `extractQuotation()` si besoin avant
+d'activer le vrai fonctionnement automatique (cron + écriture en base).
