@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/refresh-quotations", "schedule": "0 3 * * *" }
+  ]
+}
