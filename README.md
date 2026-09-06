@@ -594,3 +594,12 @@ pour les prix, mais pourraient servir plus tard (ex: lien "voir sur Numista" sur
 
 **Variables Vercel devenues inutiles** (peuvent être supprimées si tu veux nettoyer, sans urgence) :
 `NUMISTA_API_KEY`, `CRON_SECRET`.
+
+## Lien de contact pour suggérer une image (ajouté)
+Ajouté sur la page d'accueil : un lien `mailto:` qui ouvre le client mail du visiteur, avec un
+sujet pré-rempli ("Suggestion d'image - Suivi Pièces Euro"). Aucune base de données ni formulaire
+— la personne envoie directement l'image en pièce jointe par email, à toi de décider ensuite si tu
+l'utilises.
+
+**Action à faire** : dans `app/page.jsx`, remplacer `TON-EMAIL@exemple.com` (présent 2 fois sur la
+même ligne, dans le `href`) par ta vraie adresse une fois choisie.
