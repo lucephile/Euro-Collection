@@ -575,3 +575,22 @@ https://ton-site.vercel.app/api/refresh-quotations?dryRun=true&limit=3&secret=TO
 `dryRun=true` ne modifie rien en base — ça renvoie juste la réponse brute de Numista pour 3
 pièces. Envoie-moi ce résultat JSON pour que j'ajuste `extractQuotation()` si besoin avant
 d'activer le vrai fonctionnement automatique (cron + écriture en base).
+
+## Automatisation Numista abandonnée — retour au manuel (ajouté)
+En creusant la documentation officielle de tarification Numista (en.numista.com/api/pricing.php),
+il s'avère que les données de prix ("Sales results retrieval") sont **exclusivement réservées au
+Plan Payant** (0,01€/requête + 100€ d'activation + 100€/mois minimum) — le Plan Gratuit (2000
+requêtes/mois) ne donne accès qu'au catalogue et à la collection utilisateur, jamais aux prix.
+L'automatisation via Numista n'était donc pas possible, quelle que soit la configuration.
+
+**Décision** : abandon de l'automatisation. `vercel.json` (cron quotidien) et
+`app/api/refresh-quotations` (route Numista) ont été supprimés pour éviter les erreurs
+silencieuses. Les cotations resteront rafraîchies **ponctuellement, à la demande** (ex: 1x/mois) —
+il suffit de redemander à Claude de refaire l'import des cotations depuis monnaies-euros.com
+(même méthode que l'import initial), sans code ni scraper à maintenir.
+
+Les identifiants Numista déjà associés (`numista_id`, 612/613 pièces) restent en base — inutiles
+pour les prix, mais pourraient servir plus tard (ex: lien "voir sur Numista" sur chaque pièce).
+
+**Variables Vercel devenues inutiles** (peuvent être supprimées si tu veux nettoyer, sans urgence) :
+`NUMISTA_API_KEY`, `CRON_SECRET`.
