@@ -603,3 +603,8 @@ l'utilises.
 
 **Action à faire** : dans `app/page.jsx`, remplacer `TON-EMAIL@exemple.com` (présent 2 fois sur la
 même ligne, dans le `href`) par ta vraie adresse une fois choisie.
+
+## Fix : valeur faciale sets/commémoratives affichée fusionnée (ajouté)
+Les deux valeurs étaient déjà calculées séparément en interne, mais affichées additionnées sur une
+seule carte. Séparé en 3 cartes distinctes : valeur faciale des sets, valeur faciale des
+commémoratives, valeur de revente estimée des commémoratives.

@@ -116,11 +116,15 @@ export default function StatsPage() {
       <h2>Valeur estimée de ma collection</h2>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
         <div style={{ background: "var(--bg-card)", borderRadius: "var(--radius)", padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Valeur faciale (sets + commémoratives)</div>
-          <div style={{ fontSize: 24, fontWeight: 700 }}>{euro((value?.setsFace ?? 0) + (value?.commemFace ?? 0))}</div>
+          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Valeur faciale — Sets Euro par pays</div>
+          <div style={{ fontSize: 24, fontWeight: 700 }}>{euro(value?.setsFace ?? 0)}</div>
         </div>
         <div style={{ background: "var(--bg-card)", borderRadius: "var(--radius)", padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Valeur de revente estimée (commémoratives)</div>
+          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Valeur faciale — 2€ commémoratives</div>
+          <div style={{ fontSize: 24, fontWeight: 700 }}>{euro(value?.commemFace ?? 0)}</div>
+        </div>
+        <div style={{ background: "var(--bg-card)", borderRadius: "var(--radius)", padding: 16, minWidth: 200 }}>
+          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Valeur de revente estimée — 2€ commémoratives</div>
           <div style={{ fontSize: 24, fontWeight: 700 }}>{euro(value?.commemResale ?? 0)}</div>
         </div>
       </div>
