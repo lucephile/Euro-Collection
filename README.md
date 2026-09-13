@@ -608,3 +608,13 @@ même ligne, dans le `href`) par ta vraie adresse une fois choisie.
 Les deux valeurs étaient déjà calculées séparément en interne, mais affichées additionnées sur une
 seule carte. Séparé en 3 cartes distinctes : valeur faciale des sets, valeur faciale des
 commémoratives, valeur de revente estimée des commémoratives.
+
+## Améliorations page /stats (ajouté)
+- **Tableau "2€ commémoratives par pays" resserré** : même bug que rencontré ailleurs
+  (`width: "100%"` étirait les colonnes) — retiré, colonnes numériques fixées à 90-100px, plus
+  facile à lire.
+- **Compteur explicite** : "Valeur faciale (X pièces × 2€)" affiché au-dessus du montant, sur la
+  carte de valeur faciale des commémoratives.
+- **Sets et commémoratives séparés visuellement** : deux sous-titres ("Sets Euro par pays" /
+  "2€ commémoratives") avec un retour à la ligne entre les deux blocs de cartes, au lieu d'une
+  seule rangée mélangée.

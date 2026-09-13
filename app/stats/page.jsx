@@ -92,8 +92,9 @@ export default function StatsPage() {
 
       // --- Valeur de la collection ---
       const setsFace = VALUES.reduce((sum, v) => sum + ownedByValue[v] * FACE_VALUE[v], 0);
-      const commemFace = (ownedCommemRows ?? []).length * 2;
-      setValue({ setsFace, commemFace, commemResale });
+      const commemCount = (ownedCommemRows ?? []).length;
+      const commemFace = commemCount * 2;
+      setValue({ setsFace, commemFace, commemCount, commemResale });
 
       setStatus("ok");
     })();
@@ -114,17 +115,25 @@ export default function StatsPage() {
       )}
 
       <h2>Valeur estimée de ma collection</h2>
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
+
+      <h3 style={{ marginBottom: 8 }}>Sets Euro par pays</h3>
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
         <div style={{ background: "var(--bg-card)", borderRadius: "var(--radius)", padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Valeur faciale — Sets Euro par pays</div>
+          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Valeur faciale</div>
           <div style={{ fontSize: 24, fontWeight: 700 }}>{euro(value?.setsFace ?? 0)}</div>
         </div>
+      </div>
+
+      <h3 style={{ marginBottom: 8 }}>2€ commémoratives</h3>
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
         <div style={{ background: "var(--bg-card)", borderRadius: "var(--radius)", padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Valeur faciale — 2€ commémoratives</div>
+          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+            Valeur faciale ({value?.commemCount ?? 0} pièce{(value?.commemCount ?? 0) > 1 ? "s" : ""} × 2€)
+          </div>
           <div style={{ fontSize: 24, fontWeight: 700 }}>{euro(value?.commemFace ?? 0)}</div>
         </div>
         <div style={{ background: "var(--bg-card)", borderRadius: "var(--radius)", padding: 16, minWidth: 200 }}>
-          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Valeur de revente estimée — 2€ commémoratives</div>
+          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Valeur de revente estimée</div>
           <div style={{ fontSize: 24, fontWeight: 700 }}>{euro(value?.commemResale ?? 0)}</div>
         </div>
       </div>
@@ -172,22 +181,22 @@ export default function StatsPage() {
 
       <h2 style={{ marginTop: 32 }}>2€ commémoratives — par pays</h2>
       <div style={{ overflowX: "auto" }}>
-        <table style={{ borderCollapse: "collapse", width: "100%" }}>
+        <table style={{ borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              <th style={{ textAlign: "left", padding: 8 }}>Pays</th>
-              <th style={{ padding: 8 }}>Possédé</th>
-              <th style={{ padding: 8 }}>Recherché</th>
-              <th style={{ padding: 8 }}>Avancement</th>
+              <th style={{ textAlign: "left", padding: "8px 12px" }}>Pays</th>
+              <th style={{ padding: "8px 12px", width: 90 }}>Possédé</th>
+              <th style={{ padding: "8px 12px", width: 90 }}>Recherché</th>
+              <th style={{ padding: "8px 12px", width: 100 }}>Avancement</th>
             </tr>
           </thead>
           <tbody>
             {commemByCountry.map((c) => (
               <tr key={c.name}>
-                <td style={{ padding: 8 }}>{c.name}</td>
-                <td style={{ padding: 8, textAlign: "center" }}>{c.owned}</td>
-                <td style={{ padding: 8, textAlign: "center" }}>{c.total - c.owned}</td>
-                <td style={{ padding: 8, textAlign: "center" }}>{pct(c.owned, c.total)}</td>
+                <td style={{ padding: "6px 12px" }}>{c.name}</td>
+                <td style={{ padding: "6px 12px", textAlign: "center" }}>{c.owned}</td>
+                <td style={{ padding: "6px 12px", textAlign: "center" }}>{c.total - c.owned}</td>
+                <td style={{ padding: "6px 12px", textAlign: "center" }}>{pct(c.owned, c.total)}</td>
               </tr>
             ))}
           </tbody>
