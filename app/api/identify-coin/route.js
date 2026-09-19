@@ -146,6 +146,7 @@ export async function POST(request) {
   let matchedCommemorativeId = null;
   let matchLabel = null;
   let seekers = [];
+  let matchDebug = null; // diagnostic renvoyé quand aucune correspondance n'est retenue
 
   if (confidence >= CONFIDENCE_THRESHOLD && countrySlug) {
     const { data: country } = await supabaseAdmin
@@ -154,8 +155,9 @@ export async function POST(request) {
       .eq("slug", countrySlug)
       .maybeSingle();
 
-    if (country) {
-      if (kind === "commemorative" && year) {
+    if (!country) {
+      matchDebug = { reason: `Aucun pays trouvé en base pour le slug '${countrySlug}'`, ai };
+    } else if (kind === "commemorative" && year) {
         // Une année + un pays peuvent donner plusieurs pièces : on essaie
         // d'abord de trancher avec le thème identifié par Gemini
         // (commemorative_topic), sinon évaluation humaine.
@@ -164,7 +166,9 @@ export async function POST(request) {
           .select("id")
           .eq("year", year);
         const setIds = (sets ?? []).map((s) => s.id);
-        if (setIds.length) {
+        if (!setIds.length) {
+          matchDebug = { reason: `Aucun set commémoratif trouvé pour l'année ${year}`, ai };
+        } else {
           const { data: coins } = await supabaseAdmin
             .from("commemorative_coins")
             .select("id, name")
@@ -185,10 +189,22 @@ export async function POST(request) {
             if (best.score > 0 && (!runnerUp || best.score > runnerUp.score)) {
               matchedCommemorativeId = best.id;
               matchLabel = `${country.name} ${year} — ${best.name}`;
+            } else {
+              matchDebug = {
+                reason: "Plusieurs pièces candidates, aucune ne se détache clairement",
+                commemorative_topic: ai?.commemorative_topic ?? null,
+                candidates: scored,
+                ai,
+              };
             }
+          } else {
+            matchDebug = {
+              reason: `Aucune pièce en base pour ${country.name} en ${year}`,
+              ai,
+            };
           }
         }
-      } else if (kind === "set" && ai?.value) {
+    } else if (kind === "set" && ai?.value) {
         const { data: series } = await supabaseAdmin
           .from("coin_series")
           .select("id, label")
@@ -203,10 +219,19 @@ export async function POST(request) {
           if ((pieces ?? []).length === 1) {
             matchedPieceId = pieces[0].id;
             matchLabel = `${country.name} — ${ai.value}`;
+          } else {
+            matchDebug = { reason: `${(pieces ?? []).length} pièce(s) trouvée(s) pour ${country.name} ${ai.value}`, ai };
           }
+        } else {
+          matchDebug = { reason: `Aucune série trouvée pour ${country.name}`, ai };
         }
-      }
+    } else {
+      matchDebug = { reason: `Type de pièce non reconnu (kind='${kind}') ou année/valeur manquante`, ai };
     }
+  } else if (countrySlug) {
+    matchDebug = { reason: `Confiance ${confidence} sous le seuil de ${CONFIDENCE_THRESHOLD}`, ai };
+  } else {
+    matchDebug = { reason: "Gemini n'a pas identifié de pays (country_slug vide)", ai };
   }
 
   const matched = matchedPieceId != null || matchedCommemorativeId != null;
@@ -256,7 +281,8 @@ export async function POST(request) {
       ? null
       : confidence < CONFIDENCE_THRESHOLD
       ? "L'identification n'est pas assez certaine. La photo a été mise de côté pour vérification manuelle."
-      : "La pièce n'a pas pu être retrouvée avec certitude en base (plusieurs correspondances possibles). Mise de côté pour vérification manuelle.",
+      : "La pièce n'a pas pu être retrouvée avec certitude en base. Mise de côté pour vérification manuelle.",
+    debug: matched ? null : matchDebug,
     identificationId: saved?.id ?? null,
   });
 }

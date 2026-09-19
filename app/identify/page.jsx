@@ -133,15 +133,15 @@ export default function IdentifyPage() {
               <p style={{ fontSize: 13, color: "var(--text-muted)" }}>
                 {result.confidence != null && `Indice de confiance : ${Math.round(result.confidence * 100)} %`}
               </p>
-              {result.technicalDetail && (
-                <details style={{ marginTop: 12 }}>
+              {(result.technicalDetail || result.debug) && (
+                <details style={{ marginTop: 12 }} open>
                   <summary style={{ cursor: "pointer", fontSize: 13, color: "var(--text-muted)" }}>
                     Détail technique (pour diagnostic)
                   </summary>
                   <pre style={{ fontSize: 12, whiteSpace: "pre-wrap", wordBreak: "break-word", marginTop: 8 }}>
-                    modèle : {result.model}
-                    {"\n"}
+                    {result.model && `modèle : ${result.model}\n`}
                     {result.technicalDetail}
+                    {result.debug && JSON.stringify(result.debug, null, 2)}
                   </pre>
                 </details>
               )}

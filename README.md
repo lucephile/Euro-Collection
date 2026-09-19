@@ -705,3 +705,16 @@ thème identifié par Gemini (`commemorative_topic`, déjà demandé dans le pro
 français de chaque pièce candidate en base — accents ignorés. Le meilleur score l'emporte s'il est
 net (pas d'égalité avec le deuxième candidat), sinon la photo repart en vérification manuelle
 comme avant.
+
+## Diagnostic enrichi pour les cas "pending_review" (ajouté)
+Avant de deviner encore une cause, ajout d'un vrai diagnostic : chaque branche de la logique de
+correspondance (pays introuvable, année sans set, plusieurs candidats sans score net, valeur
+manquante, confiance sous le seuil...) remplit maintenant un objet `matchDebug` précis, renvoyé
+dans la réponse (`debug`) et affiché en clair sur la page (bloc "Détail technique", ouvert par
+défaut sur les cas incertains) — plus besoin de deviner à l'aveugle.
+
+Note pour la suite : la confiance de Gemini (sa certitude sur ce qu'il voit) et la certitude de la
+correspondance en base (a-t-on trouvé une seule pièce sans ambiguïté) sont deux choses distinctes
+et intentionnellement séparées — une confiance à 98% de Gemini n'empêche pas une ambiguïté côté
+base si plusieurs pièces du même pays/année ont des noms trop proches pour le score de mots-clés.
+Le detail technique dira exactement laquelle des deux est en cause.
