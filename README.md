@@ -618,3 +618,15 @@ commémoratives, valeur de revente estimée des commémoratives.
 - **Sets et commémoratives séparés visuellement** : deux sous-titres ("Sets Euro par pays" /
   "2€ commémoratives") avec un retour à la ligne entre les deux blocs de cartes, au lieu d'une
   seule rangée mélangée.
+
+## Valeur "kit" des sets Euro, série par série (ajouté)
+Nouvelle carte "Valeur 'kit' estimée (par série)" sur `/stats`, calculée série par série
+(coin_series) plutôt que globalement par pays :
+- Série complète (8 valeurs possédées) : 10€, ou **60€** pour les micro-états (Monaco, Vatican,
+  Saint-Marin)
+- Série incomplète : somme des pièces possédées, chacune à sa valeur faciale **+10%**
+  (**+100%** pour les micro-états)
+- L'Andorre est explicitement traitée comme un pays classique, pas un micro-état
+
+Exemple vérifié (Belgique) : 1re série complète = 10€, 2e série incomplète (1€+2€ possédés) =
+(1×1,10)+(2×1,10) = 3,30€, 3e série complète = 10€ → total 23,30€ pour ce pays.

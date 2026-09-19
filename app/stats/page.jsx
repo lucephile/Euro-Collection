@@ -18,7 +18,7 @@ export default function StatsPage() {
   const [username, setUsername] = useState(null);
   const [setsStats, setSetsStats] = useState(null); // { [value]: { owned, total } }
   const [commemByCountry, setCommemByCountry] = useState([]); // [{ name, owned, total }]
-  const [value, setValue] = useState(null); // { setsFace, commemFace, commemResale }
+  const [value, setValue] = useState(null); // { setsFace, setsKitValue, commemFace, commemCount, commemResale }
 
   useEffect(() => {
     (async () => {
@@ -35,12 +35,12 @@ export default function StatsPage() {
         .maybeSingle();
       setUsername(profile?.username ?? null);
 
-      // --- Sets : total par valeur + possédé par valeur ---
+      // --- Sets : total par valeur + possédé par valeur + détail par série/pays ---
       const [{ data: allPieces }, { data: ownedPieceRows }] = await Promise.all([
-        supabase.from("pieces").select("id, value"),
+        supabase.from("pieces").select("id, value, series_id, coin_series ( country_id, countries ( slug ) )"),
         supabase
           .from("user_collection_pieces")
-          .select("piece_id, possessed, pieces ( value )")
+          .select("piece_id, possessed, pieces ( value, series_id )")
           .eq("user_id", user.id)
           .eq("possessed", true),
       ]);
@@ -92,9 +92,45 @@ export default function StatsPage() {
 
       // --- Valeur de la collection ---
       const setsFace = VALUES.reduce((sum, v) => sum + ownedByValue[v] * FACE_VALUE[v], 0);
+
+      // --- Valeur "kit" des sets, série par série ---
+      // Set complet : 10€ (60€ pour les micro-états) ; incomplet : somme des
+      // pièces possédées, chacune à sa valeur faciale +10% (+100% pour les
+      // micro-états). Andorre n'est PAS un micro-état.
+      const MICRO_STATES = new Set(["monaco", "vatican", "saint-marin"]);
+
+      const seriesInfo = new Map(); // series_id -> { slug, totalCount }
+      (allPieces ?? []).forEach((p) => {
+        const slug = p.coin_series?.countries?.slug;
+        if (!seriesInfo.has(p.series_id)) seriesInfo.set(p.series_id, { slug, totalCount: 0 });
+        seriesInfo.get(p.series_id).totalCount++;
+      });
+
+      const ownedBySeriesId = new Map(); // series_id -> [face values possédées]
+      (ownedPieceRows ?? []).forEach((r) => {
+        const sid = r.pieces?.series_id;
+        const v = r.pieces?.value;
+        if (sid == null || v == null) return;
+        if (!ownedBySeriesId.has(sid)) ownedBySeriesId.set(sid, []);
+        ownedBySeriesId.get(sid).push(FACE_VALUE[v]);
+      });
+
+      let setsKitValue = 0;
+      for (const [sid, ownedValues] of ownedBySeriesId.entries()) {
+        const info = seriesInfo.get(sid);
+        if (!info || ownedValues.length === 0) continue;
+        const isMicro = MICRO_STATES.has(info.slug);
+        const isComplete = ownedValues.length === info.totalCount;
+        if (isComplete) {
+          setsKitValue += isMicro ? 60 : 10;
+        } else {
+          const multiplier = isMicro ? 2 : 1.1; // +100% ou +10%
+          setsKitValue += ownedValues.reduce((sum, fv) => sum + fv * multiplier, 0);
+        }
+      }
       const commemCount = (ownedCommemRows ?? []).length;
       const commemFace = commemCount * 2;
-      setValue({ setsFace, commemFace, commemCount, commemResale });
+      setValue({ setsFace, setsKitValue, commemFace, commemCount, commemResale });
 
       setStatus("ok");
     })();
@@ -122,6 +158,10 @@ export default function StatsPage() {
           <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Valeur faciale</div>
           <div style={{ fontSize: 24, fontWeight: 700 }}>{euro(value?.setsFace ?? 0)}</div>
         </div>
+        <div style={{ background: "var(--bg-card)", borderRadius: "var(--radius)", padding: 16, minWidth: 200 }}>
+          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Valeur "kit" estimée (par série)</div>
+          <div style={{ fontSize: 24, fontWeight: 700 }}>{euro(value?.setsKitValue ?? 0)}</div>
+        </div>
       </div>
 
       <h3 style={{ marginBottom: 8 }}>2€ commémoratives</h3>
@@ -138,9 +178,13 @@ export default function StatsPage() {
         </div>
       </div>
       <p style={{ fontSize: 13, color: "var(--text-muted)" }}>
-        La valeur faciale correspond à ce que vos pièces valent en tant que monnaie. La valeur de
-        revente est une estimation basée sur une cotation figée au moment de l'import des données
-        — elle ne se met pas encore à jour automatiquement.
+        La valeur faciale correspond à ce que vos pièces valent en tant que monnaie. La valeur
+        "kit" estimée applique, série par série : 10€ si la série est complète (60€ pour les
+        micro-états — Monaco, Vatican, Saint-Marin ; l'Andorre est traitée comme un pays classique),
+        sinon la somme des pièces possédées à leur valeur faciale +10% (+100% pour les
+        micro-états). La valeur de revente des commémoratives est une estimation basée sur une
+        cotation figée au moment de l'import des données — elle ne se met pas encore à jour
+        automatiquement.
       </p>
 
       <h2 style={{ marginTop: 32 }}>Sets Euro — par valeur de pièce</h2>
