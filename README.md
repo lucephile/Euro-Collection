@@ -630,3 +630,50 @@ Nouvelle carte "Valeur 'kit' estimée (par série)" sur `/stats`, calculée sér
 
 Exemple vérifié (Belgique) : 1re série complète = 10€, 2e série incomplète (1€+2€ possédés) =
 (1×1,10)+(2×1,10) = 3,30€, 3e série complète = 10€ → total 23,30€ pour ce pays.
+
+## Reconnaissance de pièces par photo (ajouté)
+
+### Pourquoi pas le dépôt EuroCoinRecognition
+Le dépôt GitHub envisagé (Fraf48/EuroCoinRecognition) ne convenait pas : il classe uniquement la
+**dénomination** (1c…2€) par taille et couleur via OpenCV. Il ne peut structurellement pas
+distinguer deux 2€ commémoratives de pays différents (même taille, même métal, seul le motif
+change) — or c'est exactement ce dont le site a besoin. C'est aussi du Python, incompatible avec
+le déploiement Next.js/Vercel sans service séparé.
+
+### Ce qui a été mis en place à la place
+Reconnaissance via **Gemini** (`gemini-2.0-flash`, modèle de vision), qui lit réellement le motif
+de la pièce.
+- `supabase/add_coin_identification.sql` :
+  - table `coin_identifications` (historique, réponse brute du modèle, confiance, statut)
+  - vues `commemorative_seekers` / `piece_seekers` : qui cherche quelle pièce, **restreintes aux
+    profils publics** (`is_public`) conformément au choix retenu — un profil privé n'apparaît jamais
+- `app/api/identify-coin/route.js` : reçoit la photo, interroge Gemini, fait la correspondance en
+  base, retourne la pièce identifiée + la liste des membres publics qui la cherchent
+- `app/identify/page.jsx` : page d'upload (avec `capture="environment"` pour l'appareil photo sur
+  mobile), affichage du résultat
+- Lien "Identifier une pièce" ajouté au menu
+
+### Gestion des cas incertains (statut `pending_review`)
+Une photo part en évaluation humaine dans trois cas :
+1. confiance du modèle < 0,75 (seuil `CONFIDENCE_THRESHOLD`, ajustable dans la route)
+2. plusieurs pièces possibles en base pour ce pays/cette année (pas de correspondance unique)
+3. échec technique (quota Gemini dépassé, panne, réponse illisible) — la demande est conservée
+   plutôt que perdue
+
+Ces entrées sont consultables dans la table `coin_identifications` (filtre
+`status = 'pending_review'`) depuis l'éditeur Supabase.
+
+### ⚠️ À faire avant utilisation
+1. Exécuter `supabase/add_coin_identification.sql` dans Supabase
+2. Créer une clé API Gemini sur https://aistudio.google.com/apikey (offre gratuite disponible)
+3. Ajouter la variable d'environnement `GEMINI_API_KEY` sur Vercel (Settings → Environments,
+   Production), puis redéployer
+
+### Limites connues
+- La photo elle-même n'est pas encore stockée (colonne `image_path` prévue mais non remplie) : il
+  faudrait créer un bucket Supabase Storage pour que la relecture humaine puisse voir l'image. À
+  ajouter si tu veux vraiment pouvoir arbitrer les cas incertains.
+- Pas encore d'interface d'administration pour traiter la file `pending_review` — tout se fait
+  via l'éditeur de table Supabase pour l'instant.
+- La précision réelle du modèle sur des pièces usées/mal éclairées reste à évaluer sur tes propres
+  photos ; le seuil de confiance est probablement à ajuster après quelques essais.

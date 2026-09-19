@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: "/sets", label: "Sets Euro par pays" },
   { href: "/commemoratives", label: "2€ commémoratives" },
   { href: "/country", label: "Explorer par pays" },
+  { href: "/identify", label: "Identifier une pièce" },
   { href: "/stats", label: "Mes statistiques" },
 ];
 
