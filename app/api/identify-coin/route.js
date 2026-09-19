@@ -17,6 +17,24 @@ function getSupabaseAdmin() {
   return createClient(url, key);
 }
 
+function normalizeText(s) {
+  return (s ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // retire les accents
+    .replace(/[^a-z0-9 ]/g, " ");
+}
+
+// Score de similarité simple par mots partagés (>3 lettres), entre le thème
+// que Gemini a décrit et le nom (français) de chaque pièce candidate en base.
+// Sert à départager quand un pays a émis plusieurs pièces la même année.
+function scoreMatch(topic, name) {
+  if (!topic || !name) return 0;
+  const topicWords = new Set(normalizeText(topic).split(/\s+/).filter((w) => w.length > 3));
+  const nameWords = normalizeText(name).split(/\s+/).filter((w) => w.length > 3);
+  return nameWords.reduce((score, w) => score + (topicWords.has(w) ? 1 : 0), 0);
+}
+
 const PROMPT = `Tu analyses la photo d'une pièce en euro. Réponds UNIQUEMENT par un objet JSON, sans texte autour, sans balises markdown.
 
 Format exact attendu :
@@ -138,8 +156,9 @@ export async function POST(request) {
 
     if (country) {
       if (kind === "commemorative" && year) {
-        // Une année + un pays peuvent donner plusieurs pièces : on ne
-        // tranche que s'il n'y en a qu'une, sinon évaluation humaine.
+        // Une année + un pays peuvent donner plusieurs pièces : on essaie
+        // d'abord de trancher avec le thème identifié par Gemini
+        // (commemorative_topic), sinon évaluation humaine.
         const { data: sets } = await supabaseAdmin
           .from("commemorative_sets")
           .select("id")
@@ -151,9 +170,22 @@ export async function POST(request) {
             .select("id, name")
             .eq("country_id", country.id)
             .in("set_id", setIds);
+
           if ((coins ?? []).length === 1) {
             matchedCommemorativeId = coins[0].id;
             matchLabel = `${country.name} ${year} — ${coins[0].name}`;
+          } else if ((coins ?? []).length > 1) {
+            const scored = coins
+              .map((c) => ({ ...c, score: scoreMatch(ai?.commemorative_topic, c.name) }))
+              .sort((a, b) => b.score - a.score);
+            const best = scored[0];
+            const runnerUp = scored[1];
+            // On ne retient l'auto-match que si le meilleur score est net
+            // (pas d'ambiguïté avec le deuxième candidat)
+            if (best.score > 0 && (!runnerUp || best.score > runnerUp.score)) {
+              matchedCommemorativeId = best.id;
+              matchLabel = `${country.name} ${year} — ${best.name}`;
+            }
           }
         }
       } else if (kind === "set" && ai?.value) {

@@ -693,3 +693,15 @@ que Gemini avait analysé la photo sans la reconnaître, alors que l'image ne lu
 - Les erreurs techniques remontent maintenant leur détail réel : dans les logs Vercel
   (`console.error`), dans la colonne `ai_raw_response` en base, et dans un bloc dépliable
   "Détail technique" sur la page — plus besoin de deviner la cause d'un échec.
+
+## Fix : pièce identifiée mais non retrouvée en base (ajouté)
+**Cause** : certains pays ont émis plusieurs pièces commémoratives la même année sans faire
+partie d'une édition commune (ex: Allemagne 2024 — Mecklembourg-Poméranie ET Constitution de
+Francfort). Le code exigeait une correspondance unique pays+année et abandonnait dès qu'il y en
+avait plusieurs, même avec une identification à 99% de confiance.
+
+**Fix** : quand plusieurs pièces existent pour le pays/l'année, comparaison par mots-clés entre le
+thème identifié par Gemini (`commemorative_topic`, déjà demandé dans le prompt) et le nom
+français de chaque pièce candidate en base — accents ignorés. Le meilleur score l'emporte s'il est
+net (pas d'égalité avec le deuxième candidat), sinon la photo repart en vérification manuelle
+comme avant.
