@@ -677,3 +677,19 @@ Ces entrées sont consultables dans la table `coin_identifications` (filtre
   via l'éditeur de table Supabase pour l'instant.
 - La précision réelle du modèle sur des pièces usées/mal éclairées reste à évaluer sur tes propres
   photos ; le seuil de confiance est probablement à ajuster après quelques essais.
+
+## Fix : reconnaissance photo — modèle Gemini arrêté (ajouté)
+**Cause racine** : le code utilisait `gemini-2.0-flash`, que Google a définitivement arrêté le
+1er juin 2026. Chaque appel renvoyait une erreur 404, attrapée par le bloc catch qui affichait
+"Le service de reconnaissance n'a pas pu traiter l'image" — message trompeur, qui laissait croire
+que Gemini avait analysé la photo sans la reconnaître, alors que l'image ne lui parvenait jamais.
+
+**Corrections** :
+- Modèle par défaut : `gemini-flash-latest` (alias qui suit automatiquement le modèle Flash
+  courant). Google retirant ses modèles rapidement — `gemini-2.5-flash` a déjà une date de fin
+  annoncée — l'alias évite d'avoir à modifier le code à chaque cycle.
+- Modèle surchargeable via la variable d'environnement optionnelle `GEMINI_MODEL`, si tu veux
+  figer une version précise (ex: `gemini-3-flash-preview`).
+- Les erreurs techniques remontent maintenant leur détail réel : dans les logs Vercel
+  (`console.error`), dans la colonne `ai_raw_response` en base, et dans un bloc dépliable
+  "Détail technique" sur la page — plus besoin de deviner la cause d'un échec.

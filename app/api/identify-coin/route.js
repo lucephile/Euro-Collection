@@ -4,7 +4,11 @@ import { createClient } from "@supabase/supabase-js";
 // En dessous, la photo part en évaluation humaine (status pending_review).
 const CONFIDENCE_THRESHOLD = 0.75;
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+// Google retire ses modèles rapidement (gemini-2.0-flash a été arrêté le
+// 1er juin 2026). On utilise donc par défaut l'alias "latest", qui suit
+// automatiquement le modèle Flash courant, et on laisse la possibilité de
+// figer un modèle précis via la variable d'environnement GEMINI_MODEL.
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -95,16 +99,21 @@ export async function POST(request) {
   try {
     ai = await askGemini(imageBase64, mimeType, geminiKey);
   } catch (e) {
-    // Échec technique (quota, panne, réponse illisible) : on garde la photo
-    // pour évaluation humaine plutôt que de perdre la demande.
+    // Échec technique (modèle inexistant, quota, panne, réponse illisible) :
+    // on garde la photo pour évaluation humaine plutôt que de perdre la
+    // demande, ET on remonte le détail pour pouvoir diagnostiquer.
+    const detail = String(e?.message ?? e);
+    console.error("[identify-coin] échec Gemini:", detail);
     const { data: saved } = await supabaseAdmin
       .from("coin_identifications")
-      .insert({ user_id: userId, ai_raw_response: { error: String(e) }, status: "pending_review" })
+      .insert({ user_id: userId, ai_raw_response: { error: detail }, status: "pending_review" })
       .select("id")
       .single();
     return Response.json({
       status: "pending_review",
       reason: "Le service de reconnaissance n'a pas pu traiter l'image. Elle a été mise de côté pour vérification manuelle.",
+      technicalDetail: detail,
+      model: GEMINI_MODEL,
       identificationId: saved?.id ?? null,
     });
   }
