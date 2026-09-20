@@ -718,3 +718,14 @@ correspondance en base (a-t-on trouvé une seule pièce sans ambiguïté) sont d
 et intentionnellement séparées — une confiance à 98% de Gemini n'empêche pas une ambiguïté côté
 base si plusieurs pièces du même pays/année ont des noms trop proches pour le score de mots-clés.
 Le detail technique dira exactement laquelle des deux est en cause.
+
+## Fix : correspondance par mots exacts échouait sur variantes linguistiques (ajouté)
+Cause confirmée via le diagnostic ajouté précédemment : Gemini répond avec l'orthographe
+allemande/internationale des noms propres ("Mecklenburg-Vorpommern"), alors que la base est en
+français ("Mecklembourg-Poméranie") — la comparaison mot-à-mot exact donnait un score de 0 des
+deux côtés, malgré 98% de confiance sur l'identification elle-même.
+
+Remplacé par une comparaison de **préfixes** (6 premières lettres de chaque mot significatif)
+plutôt que des mots entiers — suffisant pour les noms propres géographiques malgré les variantes
+orthographiques entre langues ("meckle" reconnu commun aux deux), sans tomber dans la complexité
+d'un vrai algorithme de distance d'édition.

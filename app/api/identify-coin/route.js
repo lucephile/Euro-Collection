@@ -25,14 +25,24 @@ function normalizeText(s) {
     .replace(/[^a-z0-9 ]/g, " ");
 }
 
-// Score de similarité simple par mots partagés (>3 lettres), entre le thème
-// que Gemini a décrit et le nom (français) de chaque pièce candidate en base.
-// Sert à départager quand un pays a émis plusieurs pièces la même année.
+// Score de similarité par préfixes de mots (6 premières lettres), entre le
+// thème que Gemini a décrit (souvent en allemand/anglais pour les noms
+// propres, ex: "Mecklenburg") et le nom français de chaque pièce candidate
+// en base (ex: "Mecklembourg") — un match mot-à-mot exact échoue sur ces
+// variantes orthographiques entre langues ; comparer les premières lettres
+// suffit pour les noms propres géographiques.
 function scoreMatch(topic, name) {
   if (!topic || !name) return 0;
-  const topicWords = new Set(normalizeText(topic).split(/\s+/).filter((w) => w.length > 3));
-  const nameWords = normalizeText(name).split(/\s+/).filter((w) => w.length > 3);
-  return nameWords.reduce((score, w) => score + (topicWords.has(w) ? 1 : 0), 0);
+  const prefixLen = 6;
+  const topicPrefixes = normalizeText(topic)
+    .split(/\s+/)
+    .filter((w) => w.length >= prefixLen)
+    .map((w) => w.slice(0, prefixLen));
+  const namePrefixes = normalizeText(name)
+    .split(/\s+/)
+    .filter((w) => w.length >= prefixLen)
+    .map((w) => w.slice(0, prefixLen));
+  return namePrefixes.reduce((score, p) => score + (topicPrefixes.includes(p) ? 1 : 0), 0);
 }
 
 const PROMPT = `Tu analyses la photo d'une pièce en euro. Réponds UNIQUEMENT par un objet JSON, sans texte autour, sans balises markdown.
